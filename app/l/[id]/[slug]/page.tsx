@@ -4,6 +4,8 @@ import { TypeBadge } from "@/components/listings/type-badge";
 import { OfferButton } from "@/components/listings/offer-button";
 import { listingImageUrl } from "@/lib/img";
 import { getListing } from "@/lib/listings/queries";
+import { getRatingSummary } from "@/lib/rating/queries";
+import { RatingSummary } from "@/components/chat/rating-summary";
 import { getSessionUser } from "@/lib/auth";
 import type { Metadata } from "next";
 
@@ -34,6 +36,9 @@ export default async function ListingPage({ params }: { params: Promise<Params> 
   if (!l) notFound();
   if (l.slug !== slug) redirect(`/l/${l.id}/${l.slug}`);
 
+  const ownerRating = l.owner.id
+    ? await getRatingSummary(l.owner.id)
+    : { avg: 0, count: 0 };
   const viewer = await getSessionUser();
 
   const jsonLd = {
@@ -102,7 +107,8 @@ export default async function ListingPage({ params }: { params: Promise<Params> 
       )}
 
       <p className="text-sm text-zinc-500">
-        Posted by {l.owner.display_name ?? "someone"}
+        Posted by {l.owner.display_name ?? "someone"}{" "}
+        <RatingSummary summary={ownerRating} />
       </p>
     </main>
   );
