@@ -48,7 +48,9 @@ export async function markTradeDone(formData: FormData): Promise<void> {
       party_b: otherId,
       status: "pending",
     });
-  if (error) throw new Error(error.message);
+  if (error && error.code !== "23505") throw new Error(error.message);
+  // 23505 = unique_violation; partial index trades_one_pending_per_chat caught
+  // a concurrent insert. Treat as success — the pending trade now exists.
 
   revalidatePath(`/chats/${chatId}`);
 }

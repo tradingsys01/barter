@@ -6,7 +6,10 @@ import { useRouter } from "next/navigation";
 export function ChatPoller({ intervalMs = 5000 }: { intervalMs?: number }) {
   const router = useRouter();
   useEffect(() => {
-    const id = setInterval(() => router.refresh(), intervalMs);
+    const tick = () => {
+      if (document.visibilityState === "visible") router.refresh();
+    };
+    const id = setInterval(tick, intervalMs);
     return () => clearInterval(id);
   }, [router, intervalMs]);
   return null;
