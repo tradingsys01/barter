@@ -94,6 +94,7 @@ export async function getListing(id: string): Promise<ListingDetail | null> {
       id, slug, title, type, status, description, wants_text, accepts_credits, created_at,
       areas:area_id ( name ),
       categories:category_id ( name ),
+      owner_id,
       users:owner_id ( id, display_name ),
       listing_images ( path, alt_text, sort_order )
     `)
@@ -116,7 +117,7 @@ export async function getListing(id: string): Promise<ListingDetail | null> {
     cover_path: images[0]?.path ?? null,
     created_at: data.created_at,
     owner: {
-      id: (data as any).users?.id ?? "",
+      id: (data as any).owner_id,
       display_name: (data as any).users?.display_name ?? null,
     },
     images,
