@@ -7,7 +7,9 @@ import { ChatPoller } from "@/components/chat/chat-poller";
 import { MessageList } from "@/components/chat/message-list";
 import { SendMessageForm } from "@/components/chat/send-message-form";
 import { TradeActions } from "@/components/chat/trade-actions";
+import { RatingForm } from "@/components/chat/rating-form";
 import { getActiveTradeForChat, getCompletedTradesForChat } from "@/lib/trade/queries";
+import { myRatingForTrade } from "@/lib/rating/queries";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +35,10 @@ export default async function ChatPage({ params }: { params: Promise<Params> }) 
     getCompletedTradesForChat(id),
   ]);
   const otherParty = chat.initiator.id === user.id ? chat.owner : chat.initiator;
+  const lastCompleted = completedTrades[0] ?? null;
+  const myRating = lastCompleted
+    ? await myRatingForTrade(lastCompleted.id, user.id)
+    : null;
 
   return (
     <main className="mx-auto flex max-w-2xl flex-col gap-4 p-4 sm:p-6">
@@ -69,6 +75,13 @@ export default async function ChatPage({ params }: { params: Promise<Params> }) 
         pending={pendingTrade}
         hasCompleted={completedTrades.length > 0}
       />
+
+      {lastCompleted && !myRating && <RatingForm tradeId={lastCompleted.id} />}
+      {lastCompleted && myRating && (
+        <p className="rounded-lg border bg-zinc-50 p-3 text-sm text-zinc-700">
+          Thanks for rating — {myRating.stars} ★{myRating.comment ? ` · "${myRating.comment}"` : ""}
+        </p>
+      )}
 
       <SendMessageForm chatId={chat.id} />
     </main>
