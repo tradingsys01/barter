@@ -3,8 +3,9 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
-import { createListingSchema } from "@/lib/listings/validation";
+import { createListingSchema, editListingSchema } from "@/lib/listings/validation";
 import { buildListingRow, validateImageFiles, fileExt } from "@/lib/listings/internal";
+import { slugify } from "@/lib/slug";
 
 export async function createListing(form: FormData): Promise<void> {
   const user = await requireUser();
@@ -51,4 +52,46 @@ export async function createListing(form: FormData): Promise<void> {
   }
 
   redirect(`/l/${listing.id}/${listing.slug}`);
+}
+
+export async function editListing(form: FormData): Promise<void> {
+  const user = await requireUser();
+  const raw = {
+    id: form.get("id"),
+    type: form.get("type") || undefined,
+    title: form.get("title") || undefined,
+    description: form.get("description") || undefined,
+    category_id: form.get("category_id") || undefined,
+    area_id: form.get("area_id") || undefined,
+    wants_text: form.get("wants_text") || undefined,
+    accepts_credits: form.get("accepts_credits") === "on",
+  };
+  const parsed = editListingSchema.parse(raw);
+  const supabase = await createClient();
+  const { id, ...patch } = parsed;
+  const update: Record<string, unknown> = { ...patch };
+  if (patch.title) update.slug = slugify(patch.title);
+
+  const { error } = await supabase
+    .from("listings")
+    .update(update)
+    .eq("id", id)
+    .eq("owner_id", user.id);
+  if (error) throw new Error(error.message);
+
+  redirect(`/l/${id}/${update.slug ?? ""}`);
+}
+
+export async function archiveListing(formData: FormData): Promise<void> {
+  const user = await requireUser();
+  const id = String(formData.get("id") ?? "");
+  if (!id) throw new Error("Missing listing id");
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("listings")
+    .update({ status: "archived" })
+    .eq("id", id)
+    .eq("owner_id", user.id);
+  if (error) throw new Error(error.message);
+  redirect("/me/listings");
 }

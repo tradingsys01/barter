@@ -5,6 +5,7 @@ export type FeedItem = {
   slug: string;
   title: string;
   type: "offer_goods" | "offer_service" | "want";
+  status: "active" | "reserved" | "completed" | "archived";
   area_name: string | null;
   category_name: string | null;
   cover_path: string | null;
@@ -12,7 +13,7 @@ export type FeedItem = {
 };
 
 const FEED_SELECT = `
-  id, slug, title, type, created_at,
+  id, slug, title, type, status, created_at,
   areas:area_id ( name ),
   categories:category_id ( name ),
   listing_images ( path, sort_order )
@@ -27,6 +28,7 @@ function shapeFeedRow(r: any): FeedItem {
     slug: r.slug,
     title: r.title,
     type: r.type,
+    status: r.status,
     area_name: r.areas?.name ?? null,
     category_name: r.categories?.name ?? null,
     cover_path: cover,
@@ -89,7 +91,7 @@ export async function getListing(id: string): Promise<ListingDetail | null> {
   const { data, error } = await supabase
     .from("listings")
     .select(`
-      id, slug, title, type, description, wants_text, accepts_credits, created_at,
+      id, slug, title, type, status, description, wants_text, accepts_credits, created_at,
       areas:area_id ( name ),
       categories:category_id ( name ),
       users:owner_id ( id, display_name ),
@@ -105,6 +107,7 @@ export async function getListing(id: string): Promise<ListingDetail | null> {
     slug: data.slug,
     title: data.title,
     type: data.type,
+    status: (data as any).status,
     description: data.description,
     wants_text: data.wants_text,
     accepts_credits: data.accepts_credits,
