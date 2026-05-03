@@ -1,8 +1,10 @@
 import { notFound, redirect } from "next/navigation";
 import Image from "next/image";
 import { TypeBadge } from "@/components/listings/type-badge";
+import { OfferButton } from "@/components/listings/offer-button";
 import { listingImageUrl } from "@/lib/img";
 import { getListing } from "@/lib/listings/queries";
+import { getSessionUser } from "@/lib/auth";
 import type { Metadata } from "next";
 
 type Params = { id: string; slug: string };
@@ -31,6 +33,8 @@ export default async function ListingPage({ params }: { params: Promise<Params> 
   const l = await getListing(id);
   if (!l) notFound();
   if (l.slug !== slug) redirect(`/l/${l.id}/${l.slug}`);
+
+  const viewer = await getSessionUser();
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -62,6 +66,15 @@ export default async function ListingPage({ params }: { params: Promise<Params> 
       </div>
 
       <h1 className="text-3xl font-semibold">{l.title}</h1>
+
+      <div className="pt-2">
+        <OfferButton
+          listingId={l.id}
+          listingSlug={l.slug}
+          viewerId={viewer?.id}
+          ownerId={l.owner.id}
+        />
+      </div>
 
       {l.images.length > 0 && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
