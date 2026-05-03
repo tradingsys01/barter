@@ -3,13 +3,14 @@ import { listMyListings } from "@/lib/listings/queries";
 import { archiveListing } from "@/lib/listings/actions";
 import { TypeBadge } from "@/components/listings/type-badge";
 import { listingImageUrl } from "@/lib/img";
+import { requireUser } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "My listings — Quadra Barter" };
 
 export default async function MyListingsPage() {
-  const all = await listMyListings();
-  const items = all.filter((it) => it.status !== "archived");
+  const user = await requireUser();
+  const items = await listMyListings(user.id);
 
   return (
     <main className="mx-auto max-w-3xl space-y-4 p-6">

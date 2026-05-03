@@ -123,11 +123,13 @@ export async function getListing(id: string): Promise<ListingDetail | null> {
   };
 }
 
-export async function listMyListings(): Promise<FeedItem[]> {
+export async function listMyListings(userId: string): Promise<FeedItem[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("listings")
     .select(FEED_SELECT)
+    .eq("owner_id", userId)
+    .neq("status", "archived")
     .order("created_at", { ascending: false });
   if (error) throw error;
   return (data ?? []).map(shapeFeedRow);

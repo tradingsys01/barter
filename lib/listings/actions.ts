@@ -72,14 +72,16 @@ export async function editListing(form: FormData): Promise<void> {
   const update: Record<string, unknown> = { ...patch };
   if (patch.title) update.slug = slugify(patch.title);
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("listings")
     .update(update)
     .eq("id", id)
-    .eq("owner_id", user.id);
-  if (error) throw new Error(error.message);
+    .eq("owner_id", user.id)
+    .select("id, slug")
+    .single();
+  if (error || !data) throw new Error(error?.message ?? "Could not update listing");
 
-  redirect(`/l/${id}/${update.slug ?? ""}`);
+  redirect(`/l/${data.id}/${data.slug}`);
 }
 
 export async function archiveListing(formData: FormData): Promise<void> {

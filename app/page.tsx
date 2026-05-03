@@ -2,8 +2,6 @@ import Link from "next/link";
 import { listFeed } from "@/lib/listings/queries";
 import { ListingGrid } from "@/components/listings/listing-grid";
 
-export const revalidate = 60; // ISR — feed re-renders at most once a minute
-
 export default async function HomePage() {
   const items = await listFeed(24);
 
