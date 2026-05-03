@@ -7,9 +7,12 @@ export async function SiteHeader() {
     <header className="border-b border-zinc-200">
       <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
         <Link href="/" className="font-semibold">Quadra Barter</Link>
-        <nav className="text-sm">
+        <nav className="text-sm flex items-center gap-4">
           {user ? (
-            <Link href="/me" className="text-zinc-700 hover:underline">My account</Link>
+            <>
+              <Link href="/listings/new" className="text-zinc-700 hover:underline">Post</Link>
+              <Link href="/me" className="text-zinc-700 hover:underline">My account</Link>
+            </>
           ) : (
             <Link href="/signin" className="text-zinc-700 hover:underline">Sign in</Link>
           )}
