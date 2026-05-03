@@ -11,6 +11,7 @@ export async function SiteHeader() {
           {user ? (
             <>
               <Link href="/listings/new" className="text-zinc-700 hover:underline">Post</Link>
+              <Link href="/chats" className="text-zinc-700 hover:underline">Chats</Link>
               <Link href="/me" className="text-zinc-700 hover:underline">My account</Link>
             </>
           ) : (
