@@ -1,0 +1,16 @@
+import "./globals.css";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Quadra Island Barter",
+  description: "Swap goods and services on Quadra Island, BC. No money. No shipping.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body className="bg-white text-zinc-900 antialiased">{children}</body>
+    </html>
+  );
+}
