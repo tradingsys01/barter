@@ -7,8 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:unit": "vitest run",
-    "test:unit:watch": "vitest",
+    "test:unit": "dotenv -e .env.local -- vitest run",
+    "test:unit:watch": "dotenv -e .env.local -- vitest",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "db:apply": "for f in supabase/migrations/*.sql; do docker exec -i supabase-db psql -U postgres -d postgres < $f; done && docker exec -i supabase-db psql -U postgres -d postgres < supabase/seed.sql"
@@ -34,6 +34,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitest/ui": "^4.1.5",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
     "tailwindcss": "^4",
