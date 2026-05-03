@@ -3,6 +3,7 @@ import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { getChat, getMessages } from "@/lib/chat/queries";
 import { listingImageUrl } from "@/lib/img";
+import { ChatPoller } from "@/components/chat/chat-poller";
 import { MessageList } from "@/components/chat/message-list";
 import { SendMessageForm } from "@/components/chat/send-message-form";
 
@@ -29,6 +30,7 @@ export default async function ChatPage({ params }: { params: Promise<Params> }) 
 
   return (
     <main className="mx-auto flex max-w-2xl flex-col gap-4 p-4 sm:p-6">
+      <ChatPoller />
       <header className="flex items-center gap-3 rounded-lg border bg-white p-3">
         <div className="h-12 w-12 shrink-0 overflow-hidden rounded bg-zinc-100">
           {chat.listing.cover_path && (
