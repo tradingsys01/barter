@@ -6,6 +6,8 @@ import { listingImageUrl } from "@/lib/img";
 import { ChatPoller } from "@/components/chat/chat-poller";
 import { MessageList } from "@/components/chat/message-list";
 import { SendMessageForm } from "@/components/chat/send-message-form";
+import { TradeActions } from "@/components/chat/trade-actions";
+import { getActiveTradeForChat, getCompletedTradesForChat } from "@/lib/trade/queries";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +28,10 @@ export default async function ChatPage({ params }: { params: Promise<Params> }) 
   if (chat.initiator.id !== user.id && chat.owner.id !== user.id) notFound();
 
   const messages = await getMessages(id);
+  const [pendingTrade, completedTrades] = await Promise.all([
+    getActiveTradeForChat(id),
+    getCompletedTradesForChat(id),
+  ]);
   const otherParty = chat.initiator.id === user.id ? chat.owner : chat.initiator;
 
   return (
@@ -56,6 +62,13 @@ export default async function ChatPage({ params }: { params: Promise<Params> }) 
       <section className="min-h-[40vh] rounded-lg border bg-white p-3">
         <MessageList messages={messages} viewerId={user.id} />
       </section>
+
+      <TradeActions
+        chatId={chat.id}
+        viewerId={user.id}
+        pending={pendingTrade}
+        hasCompleted={completedTrades.length > 0}
+      />
 
       <SendMessageForm chatId={chat.id} />
     </main>
