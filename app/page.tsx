@@ -1,21 +1,31 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { listFeed } from "@/lib/listings/queries";
+import { ListingGrid } from "@/components/listings/listing-grid";
 
-export default function Page() {
+export const revalidate = 60; // ISR — feed re-renders at most once a minute
+
+export default async function HomePage() {
+  const items = await listFeed(24);
+
   return (
-    <main className="max-w-3xl mx-auto px-4 py-16">
-      <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight">
-        Swap goods and services on Quadra Island.
-      </h1>
-      <p className="mt-4 text-lg text-zinc-600">
-        No money. No shipping. Just neighbours and visitors trading what they have for what they need.
-      </p>
-      <div className="mt-8 flex gap-3">
-        <Link href="/signin"><Button>Get started</Button></Link>
-      </div>
-      <p className="mt-12 text-sm text-zinc-500">
-        Listings, chat, and ratings are coming next. Sign in now to be ready when we launch.
-      </p>
+    <main className="mx-auto max-w-5xl space-y-10 p-6">
+      <section className="space-y-3 text-center">
+        <h1 className="text-3xl font-semibold sm:text-4xl">
+          Swap goods and services on Quadra Island
+        </h1>
+        <p className="text-zinc-600">No money. Just neighbours trading what they have for what they need.</p>
+        <Link
+          href="/signin"
+          className="inline-block rounded bg-emerald-700 px-4 py-2 text-white"
+        >
+          Get started
+        </Link>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-xl font-semibold">Latest listings</h2>
+        <ListingGrid items={items} emptyText="Nothing posted yet — be the first." />
+      </section>
     </main>
   );
 }
