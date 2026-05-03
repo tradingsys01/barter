@@ -74,26 +74,30 @@ export async function getChat(chatId: string): Promise<ChatHeader | null> {
   if (error) throw error;
   if (!data) return null;
 
-  const cover = ((data as any).listing?.listing_images ?? [])
+  const row = data as any;
+  const cover = (row.listing?.listing_images ?? [])
     .slice()
     .sort((a: any, b: any) => a.sort_order - b.sort_order)[0]?.path ?? null;
 
+  // RLS on `users` only exposes a profile to its owner, so the embedded
+  // initiator/owner rows may come back null for the *other* party. Fall
+  // back to the foreign-key id columns so the page can still render.
   return {
-    id: data.id,
+    id: row.id,
     listing: {
-      id: (data as any).listing.id,
-      title: (data as any).listing.title,
-      slug: (data as any).listing.slug,
-      owner_id: (data as any).listing.owner_id,
+      id: row.listing?.id,
+      title: row.listing?.title ?? "",
+      slug: row.listing?.slug ?? "",
+      owner_id: row.listing?.owner_id ?? row.owner_id,
       cover_path: cover,
     },
     initiator: {
-      id: (data as any).initiator.id,
-      display_name: (data as any).initiator.display_name ?? null,
+      id: row.initiator?.id ?? row.initiator_id,
+      display_name: row.initiator?.display_name ?? null,
     },
     owner: {
-      id: (data as any).owner.id,
-      display_name: (data as any).owner.display_name ?? null,
+      id: row.owner?.id ?? row.owner_id,
+      display_name: row.owner?.display_name ?? null,
     },
   };
 }
