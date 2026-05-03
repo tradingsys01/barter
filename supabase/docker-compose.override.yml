@@ -26,6 +26,9 @@ services:
       GOTRUE_SMTP_PASS: ""
       GOTRUE_SMTP_ADMIN_EMAIL: noreply@localhost
       GOTRUE_SMTP_SENDER_NAME: Quadra Barter (dev)
+      # Dev only: lift the per-hour magic-link cap so heavy e2e suites don't
+      # trip GoTrue's rate limiter. Production keeps the default.
+      GOTRUE_RATE_LIMIT_EMAIL_SENT: "10000"
     depends_on:
       mailpit:
         condition: service_started
