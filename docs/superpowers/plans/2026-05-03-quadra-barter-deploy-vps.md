@@ -1,16 +1,16 @@
 # Quadra Barter — Production Deploy Plan (shared VPS)
 
-> **For: an operator with sudo on a shared VPS at 167.86.77.166. Other applications may already be running. This plan minimizes blast radius, isolates Quadra Barter to its own subtree (`/opt/barter`) and its own systemd unit, uses high (non-default) ports for Supabase internals, and only touches the public 80/443 surface via the existing reverse proxy.**
+> **For: an operator with sudo on a shared VPS at <server-ip>. Other applications may already be running. This plan minimizes blast radius, isolates Quadra Barter to its own subtree (`/opt/barter`) and its own systemd unit, uses high (non-default) ports for Supabase internals, and only touches the public 80/443 surface via the existing reverse proxy.**
 
-**Goal:** Bring up `https://barter.asterivo.ca` (UI) + `https://api.barter.asterivo.ca` (Supabase Kong) on this server without disturbing anything else running on it.
+**Goal:** Bring up `https://barter.your-domain.example` (UI) + `https://api.barter.your-domain.example` (Supabase Kong) on this server without disturbing anything else running on it.
 
-**Server access:** SSH as `prdr@167.86.77.166`, then `sudo su -` for root. Most steps run as root; the systemd unit runs as `prdr`.
+**Server access:** SSH as `<deploy-user>@<server-ip>`, then `sudo su -` for root. Most steps run as root; the systemd unit runs as `<deploy-user>`.
 
 **Tech assumptions:** Ubuntu 20.04 (per SSH banner), Docker + docker-compose-plugin available (will verify in Phase 0).
 
 **External dependencies confirmed by user:**
-- DNS: `barter.asterivo.ca` and `api.barter.asterivo.ca` already point at 167.86.77.166 ✓
-- Resend domain `barter.asterivo.ca` verified, API key in hand ✓
+- DNS: `barter.your-domain.example` and `api.barter.your-domain.example` already point at <server-ip> ✓
+- Resend domain `barter.your-domain.example` verified, API key in hand ✓
 - B2 backups deferred to a follow-up plan ⏳
 
 ---
@@ -79,7 +79,7 @@ ls -la /opt/barter 2>/dev/null || echo "no /opt/barter — clean"
 | No reverse proxy | Install Caddy fresh and own 80/443. Document the change. |
 | Port 5432 is in use | Override `supabase-db` to publish only on `127.0.0.1:54322` (private to host). |
 | Port 8000 is in use | Override Kong to publish only on `127.0.0.1:54321`. Reverse proxy hits localhost:54321. |
-| `prdr` is not in `docker` group | `usermod -aG docker prdr`, log out + back in. |
+| `<deploy-user>` is not in `docker` group | `usermod -aG docker prdr`, log out + back in. |
 | Disk free < 15 GB at `/` | Move the deploy to a larger mount (e.g. `/data/barter`); update systemd unit `WorkingDirectory`. |
 | Docker not installed | Install via official apt repo (extra confirmation needed; affects whole-server). |
 
@@ -136,9 +136,9 @@ sudo -u prdr sed -i \
   -e "s|^POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=$PG_PASSWORD|" \
   -e "s|^DASHBOARD_PASSWORD=.*|DASHBOARD_PASSWORD=$DASH_PASSWORD|" \
   -e "s|^JWT_SECRET=.*|JWT_SECRET=$JWT_SECRET|" \
-  -e "s|^SITE_URL=.*|SITE_URL=https://barter.asterivo.ca|" \
-  -e "s|^API_EXTERNAL_URL=.*|API_EXTERNAL_URL=https://api.barter.asterivo.ca|" \
-  -e "s|^ADDITIONAL_REDIRECT_URLS=.*|ADDITIONAL_REDIRECT_URLS=https://barter.asterivo.ca/auth/callback|" \
+  -e "s|^SITE_URL=.*|SITE_URL=https://barter.your-domain.example|" \
+  -e "s|^API_EXTERNAL_URL=.*|API_EXTERNAL_URL=https://api.barter.your-domain.example|" \
+  -e "s|^ADDITIONAL_REDIRECT_URLS=.*|ADDITIONAL_REDIRECT_URLS=https://barter.your-domain.example/auth/callback|" \
   supabase/.env
 
 # 2.2 — Generate ANON_KEY and SERVICE_ROLE_KEY JWTs from JWT_SECRET
@@ -207,7 +207,7 @@ services:
       GOTRUE_SMTP_PORT: "465"
       GOTRUE_SMTP_USER: resend
       GOTRUE_SMTP_PASS: ${RESEND_API_KEY}
-      GOTRUE_SMTP_ADMIN_EMAIL: noreply@barter.asterivo.ca
+      GOTRUE_SMTP_ADMIN_EMAIL: noreply@barter.your-domain.example
       GOTRUE_SMTP_SENDER_NAME: Quadra Barter
 YML
 
@@ -281,10 +281,10 @@ ANON_KEY=$(grep '^ANON_KEY=' /opt/barter/supabase/.env | cut -d= -f2-)
 SERVICE_KEY=$(grep '^SERVICE_ROLE_KEY=' /opt/barter/supabase/.env | cut -d= -f2-)
 
 sudo -u prdr tee /opt/barter/.env.production > /dev/null <<EOF
-NEXT_PUBLIC_SUPABASE_URL=https://api.barter.asterivo.ca
+NEXT_PUBLIC_SUPABASE_URL=https://api.barter.your-domain.example
 NEXT_PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY
 SUPABASE_SERVICE_ROLE_KEY=$SERVICE_KEY
-NEXT_PUBLIC_SITE_URL=https://barter.asterivo.ca
+NEXT_PUBLIC_SITE_URL=https://barter.your-domain.example
 ADMIN_USER_IDS=
 NODE_ENV=production
 PORT=3001
@@ -340,11 +340,11 @@ Rollback: `sudo systemctl disable --now barter && sudo rm /etc/systemd/system/ba
 
 ```bash
 sudo tee /etc/caddy/sites-enabled/barter.caddy > /dev/null <<'CADDY'
-barter.asterivo.ca {
+barter.your-domain.example {
     encode gzip zstd
     reverse_proxy 127.0.0.1:3001
 
-    @api host api.barter.asterivo.ca
+    @api host api.barter.your-domain.example
     handle @api {
         reverse_proxy 127.0.0.1:54321
     }
@@ -355,7 +355,7 @@ barter.asterivo.ca {
     }
 }
 
-api.barter.asterivo.ca {
+api.barter.your-domain.example {
     encode gzip zstd
     reverse_proxy 127.0.0.1:54321
 }
@@ -373,14 +373,14 @@ sudo systemctl reload caddy
 sudo tee /etc/nginx/sites-available/barter > /dev/null <<'NGINX'
 server {
     listen 80;
-    server_name barter.asterivo.ca api.barter.asterivo.ca;
+    server_name barter.your-domain.example api.barter.your-domain.example;
     location / { return 301 https://$host$request_uri; }
 }
 server {
     listen 443 ssl http2;
-    server_name barter.asterivo.ca;
+    server_name barter.your-domain.example;
     # ssl_certificate / ssl_certificate_key — use the existing certbot setup, OR
-    # provision certs first with: sudo certbot --nginx -d barter.asterivo.ca -d api.barter.asterivo.ca
+    # provision certs first with: sudo certbot --nginx -d barter.your-domain.example -d api.barter.your-domain.example
     location / {
         proxy_pass http://127.0.0.1:3001;
         proxy_http_version 1.1;
@@ -392,7 +392,7 @@ server {
 }
 server {
     listen 443 ssl http2;
-    server_name api.barter.asterivo.ca;
+    server_name api.barter.your-domain.example;
     location / {
         proxy_pass http://127.0.0.1:54321;
         proxy_http_version 1.1;
@@ -408,7 +408,7 @@ NGINX
 sudo ln -s /etc/nginx/sites-available/barter /etc/nginx/sites-enabled/barter
 sudo nginx -t
 sudo systemctl reload nginx
-sudo certbot --nginx -d barter.asterivo.ca -d api.barter.asterivo.ca --non-interactive --agree-tos -m operator@asterivo.ca
+sudo certbot --nginx -d barter.your-domain.example -d api.barter.your-domain.example --non-interactive --agree-tos -m operator@your-domain.example
 ```
 
 **Branch C — no proxy on the box:** install Caddy.
@@ -420,11 +420,11 @@ curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo 
 sudo apt update && sudo apt install -y caddy
 
 sudo tee /etc/caddy/Caddyfile > /dev/null <<'CADDY'
-barter.asterivo.ca {
+barter.your-domain.example {
     encode gzip zstd
     reverse_proxy 127.0.0.1:3001
 }
-api.barter.asterivo.ca {
+api.barter.your-domain.example {
     encode gzip zstd
     reverse_proxy 127.0.0.1:54321
 }
@@ -439,20 +439,20 @@ sudo systemctl reload caddy
 
 ```bash
 # 7.1 — Hit both subdomains over HTTPS (Caddy auto-provisions Let's Encrypt; nginx+certbot path was provisioned in 6B)
-curl -sS -o /dev/null -w "ui:  %{http_code}\n" https://barter.asterivo.ca
-curl -sS -o /dev/null -w "api: %{http_code}\n" https://api.barter.asterivo.ca
+curl -sS -o /dev/null -w "ui:  %{http_code}\n" https://barter.your-domain.example
+curl -sS -o /dev/null -w "api: %{http_code}\n" https://api.barter.your-domain.example
 
 # Expected: ui 200, api 401 (Kong wants an apikey).
 
 # 7.2 — Verify the home feed renders
-curl -sS https://barter.asterivo.ca | grep -E '(Quadra Barter|Latest listings)' | head -3
+curl -sS https://barter.your-domain.example | grep -E '(Quadra Barter|Latest listings)' | head -3
 
 # 7.3 — Verify SEO endpoints
-curl -sS https://barter.asterivo.ca/sitemap.xml | head -3
-curl -sS https://barter.asterivo.ca/robots.txt  | head -3
+curl -sS https://barter.your-domain.example/sitemap.xml | head -3
+curl -sS https://barter.your-domain.example/robots.txt  | head -3
 
 # 7.4 — Live magic-link test (operator does this in a browser)
-# Visit https://barter.asterivo.ca, sign in with a real email, watch your inbox
+# Visit https://barter.your-domain.example, sign in with a real email, watch your inbox
 # (NOT Mailpit — Resend delivers to the real address).
 ```
 
@@ -469,8 +469,8 @@ sudo -u prdr tee deploy/README.md > /dev/null <<'DEPLOY'
 # Production deploy notes
 
 This server runs Quadra Barter at:
-- https://barter.asterivo.ca       (Next.js UI)
-- https://api.barter.asterivo.ca   (Supabase Kong gateway)
+- https://barter.your-domain.example       (Next.js UI)
+- https://api.barter.your-domain.example   (Supabase Kong gateway)
 
 Stack lives at /opt/barter, owned by prdr.
 
@@ -493,7 +493,7 @@ Stack lives at /opt/barter, owned by prdr.
 ## Studio (admin)
 
 Bound only to localhost:54323. SSH-tunnel to use it:
-    ssh -L 54323:127.0.0.1:54323 prdr@167.86.77.166
+    ssh -L 54323:127.0.0.1:54323 <deploy-user>@<server-ip>
 Then visit http://localhost:54323
 DEPLOY
 
@@ -522,9 +522,9 @@ Not in this plan, scheduled for a follow-up:
 | Reverse-proxy reload breaks an unrelated existing site | Phase 0 inventories what's there; Phase 6 only adds, never replaces; `caddy validate` / `nginx -t` before reload. |
 | Supabase pulls 6 GB and exhausts disk | Phase 0 checks `df`. If `/` < 15 GB free, abort and re-plan. |
 | Port collision with an existing service | All Supabase services bind to `127.0.0.1` on non-default high ports (54321/54322/54323). Next.js uses 3001 instead of 3000. |
-| `prdr` not in `docker` group | Phase 0 detects; Phase 1 adds — requires log out/in; not silent. |
-| Resend API key leaks to git | Stored only in `/opt/barter/supabase/.env` and `/opt/barter/.env.production`, both 0600 owned by `prdr`, both gitignored. The server's repo is just a clone — `git push` from the server only adds `deploy/*` files. |
-| Magic links 404 on signin | Phase 5 sets `NEXT_PUBLIC_SITE_URL=https://barter.asterivo.ca` and 2.1 sets `ADDITIONAL_REDIRECT_URLS` so GoTrue accepts the callback. |
+| `<deploy-user>` not in `docker` group | Phase 0 detects; Phase 1 adds — requires log out/in; not silent. |
+| Resend API key leaks to git | Stored only in `/opt/barter/supabase/.env` and `/opt/barter/.env.production`, both 0600 owned by `<deploy-user>`, both gitignored. The server's repo is just a clone — `git push` from the server only adds `deploy/*` files. |
+| Magic links 404 on signin | Phase 5 sets `NEXT_PUBLIC_SITE_URL=https://barter.your-domain.example` and 2.1 sets `ADDITIONAL_REDIRECT_URLS` so GoTrue accepts the callback. |
 | Studio publicly exposed | Studio bound to `127.0.0.1:54323` only; accessed via SSH tunnel. |
 | `service_role` key leaks via the API host | Kong only routes anon requests outward. Service-role calls happen from the Next.js process via the in-network Supabase, never over the public hostname. |
 | Stale dev override `docker-compose.override.yml` clobbered | The repo has a dev-flavored override; the production override is generated from scratch in Phase 2.3 and overwrites the dev one. Document in `deploy/README.md`. |
