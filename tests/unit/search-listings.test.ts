@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildSearchFilter } from "@/lib/listings/search";
+import { buildSearchFilter, escapeOrValue } from "@/lib/listings/search";
 
 describe("buildSearchFilter", () => {
   it("returns the empty filter for empty input", () => {
@@ -24,5 +24,23 @@ describe("buildSearchFilter", () => {
 
   it("ignores empty or whitespace-only slugs", () => {
     expect(buildSearchFilter({ categorySlug: "", areaSlug: "   " })).toEqual({});
+  });
+});
+
+describe("escapeOrValue", () => {
+  it("wraps in double quotes", () => {
+    expect(escapeOrValue("apples")).toBe('"apples"');
+  });
+
+  it("escapes embedded double quotes", () => {
+    expect(escapeOrValue('say "hi"')).toBe('"say \\"hi\\""');
+  });
+
+  it("escapes embedded backslashes", () => {
+    expect(escapeOrValue("a\\b")).toBe('"a\\\\b"');
+  });
+
+  it("does not interpret comma or dot specially", () => {
+    expect(escapeOrValue("x,owner_id.eq.123")).toBe('"x,owner_id.eq.123"');
   });
 });

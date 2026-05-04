@@ -25,7 +25,7 @@ export async function listOpenReports(): Promise<ReportRow[]> {
     .from("reports")
     .select(`
       id, reporter_id, target_type, target_id, reason, status, created_at,
-      reporter:reporter_id ( display_name )
+      reporter:public_users!reporter_id ( display_name )
     `)
     .eq("status", "open")
     .order("created_at", { ascending: false });

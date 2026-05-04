@@ -15,6 +15,14 @@ export type SearchFilter = {
 };
 
 /**
+ * Escape a string for use as a value inside a PostgREST .or() filter.
+ * Wraps in double quotes and escapes embedded backslashes and quotes.
+ */
+export function escapeOrValue(s: string): string {
+  return `"${s.replace(/[\\"]/g, "\\$&")}"`;
+}
+
+/**
  * Pure: normalize search params. Trims, lowercases, drops too-short
  * queries, escapes ilike wildcards, drops empty slugs.
  */
@@ -72,7 +80,10 @@ export async function searchListings(input: SearchInput): Promise<FeedItem[]> {
     .eq("status", "active");
   if (categoryId) query = query.eq("category_id", categoryId);
   if (areaId) query = query.eq("area_id", areaId);
-  if (filter.q) query = query.or(`title.ilike.%${filter.q}%,description.ilike.%${filter.q}%`);
+  if (filter.q) {
+    const pattern = escapeOrValue(`%${filter.q}%`);
+    query = query.or(`title.ilike.${pattern},description.ilike.${pattern}`);
+  }
 
   const { data, error } = await query
     .order("created_at", { ascending: false })

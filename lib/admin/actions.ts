@@ -57,10 +57,19 @@ export async function banUser(formData: FormData): Promise<void> {
   const id = String(formData.get("user_id") ?? "");
   if (!id) throw new Error("Missing user_id");
   const supabase = admin();
-  const { error } = await supabase
+
+  // 1. Mark in our public.users table (so RLS / public_users / future code paths can see it).
+  const { error: profErr } = await supabase
     .from("users")
     .update({ banned_at: new Date().toISOString() })
     .eq("id", id);
-  if (error) throw new Error(error.message);
+  if (profErr) throw new Error(profErr.message);
+
+  // 2. Ban via Supabase Auth so the user can't sign in. ~100 years.
+  const { error: authErr } = await supabase.auth.admin.updateUserById(id, {
+    ban_duration: "876000h",
+  });
+  if (authErr) throw new Error(authErr.message);
+
   revalidatePath("/admin/reports");
 }
