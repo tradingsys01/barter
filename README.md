@@ -1,36 +1,96 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Quadra Barter
 
-## Getting Started
+Swap-only marketplace for Quadra Island, BC. No money — neighbours and visitors trade what they have for what they need.
 
-First, run the development server:
+Live at: _(coming soon)_
+
+## What's here
+
+A working v1 of a hyper-local barter site:
+
+- **Listings** — post offers, services, or wanted items with photos. Browse a feed; filter by category or area; deep-link permanent URLs.
+- **Public profiles** — `/u/[id]` shows display name, area, listings, rating summary.
+- **Chat** — 1:1 conversations between buyer and seller, polled every 5s while the tab is visible.
+- **Trade lifecycle** — either party marks a trade done; the other confirms (or cancels). Both can rate each other afterward (1–5 stars + optional comment).
+- **Reports + admin** — users flag listings; an env-allowlisted admin moderates at `/admin/reports`.
+- **SEO/LLM scaffolding** — JSON-LD on listing detail, dynamic `sitemap.xml`, `robots.txt`, `llms.txt`, Open Graph metadata.
+
+## Stack
+
+- [Next.js 16](https://nextjs.org/) App Router (server actions + RSC), TypeScript, Tailwind v4, shadcn/ui (Zinc/New-York)
+- Self-hosted [Supabase](https://supabase.com/) (Postgres + Auth + Storage) via the official `supabase/docker` stack
+- [Zod](https://zod.dev/) for input validation
+- [Vitest](https://vitest.dev/) (unit) + [Playwright](https://playwright.dev/) (e2e)
+- [Mailpit](https://github.com/axllent/mailpit) catches dev SMTP so magic links land at `localhost:8025`
+- Production: Caddy reverse proxy, Backblaze B2 backups (planned)
+
+## Quickstart
+
+Requires Docker, Node 20+, pnpm 10+.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+git clone https://github.com/tradingsys01/barter.git
+cd barter
+pnpm install
+
+# Bring up the Supabase stack (db, auth, storage, kong, mailpit, ...)
+cd supabase && docker compose up -d && cd ..
+
+# Apply migrations + seed
+for f in supabase/migrations/*.sql; do docker exec -i supabase-db psql -U postgres -d postgres < "$f"; done
+docker exec -i supabase-db psql -U postgres -d postgres < supabase/seed.sql
+
+# Configure env
+cp .env.example .env.local
+# Edit .env.local — set NEXT_PUBLIC_SUPABASE_ANON_KEY and SUPABASE_SERVICE_ROLE_KEY
+# from your local Supabase stack (see supabase/.env after first `docker compose up`).
+
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000. Magic-link emails appear at http://localhost:8025.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Tests
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+pnpm test:unit            # Vitest (50 tests)
+pnpm test:e2e             # Playwright (12 tests, drives a real browser)
+pnpm tsc --noEmit         # type-check
+```
 
-## Learn More
+## Project layout
 
-To learn more about Next.js, take a look at the following resources:
+```
+app/                      # Next.js App Router pages + route handlers
+components/               # React components (listings, chat, feed, users, admin)
+lib/                      # server actions, queries, validation, helpers
+  supabase/               # SSR + browser Supabase clients
+  listings/               # listings actions + queries + search
+  chat/                   # chat actions + queries
+  trade/                  # trade lifecycle actions + queries
+  rating/                 # rate trade
+  reports/                # report listings/users
+  admin/                  # admin auth, queries, moderation actions
+supabase/                 # self-hosted Supabase stack
+  migrations/             # SQL schema + RLS policies (numbered)
+  seed.sql                # reference data (categories, areas)
+  docker-compose.override.yml  # local-dev tweaks (Mailpit, rate limits)
+docs/superpowers/         # design spec + implementation plans
+tests/
+  unit/                   # Vitest
+  e2e/                    # Playwright
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Design + plans
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The `docs/superpowers/` directory contains the design spec and the four implementation plans that built this project. Each plan is self-contained TDD tasks.
 
-## Deploy on Vercel
+- [Design spec](docs/superpowers/specs/2026-05-02-quadra-barter-design.md)
+- [Plan 1 — Foundation](docs/superpowers/plans/2026-05-02-quadra-barter-foundation.md)
+- [Plan 2 — Listings](docs/superpowers/plans/2026-05-03-quadra-barter-listings.md)
+- [Plan 3 — Interactions](docs/superpowers/plans/2026-05-03-quadra-barter-interactions.md)
+- [Plan 4 — Launch polish](docs/superpowers/plans/2026-05-03-quadra-barter-launch-polish.md)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## License
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT. See [LICENSE](LICENSE).
