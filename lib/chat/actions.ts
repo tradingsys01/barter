@@ -22,7 +22,7 @@ export async function startChat(formData: FormData): Promise<void> {
 
   const { data: listing, error: lerr } = await supabase
     .from("listings")
-    .select("id, owner_id, title, status, users:owner_id ( display_name )")
+    .select("id, owner_id, title, status, public_users:owner_id ( display_name )")
     .eq("id", listingId)
     .maybeSingle();
   if (lerr) throw new Error(lerr.message);
@@ -51,7 +51,7 @@ export async function startChat(formData: FormData): Promise<void> {
     .single();
   if (cerr || !chat) throw new Error(cerr?.message ?? "Could not start chat");
 
-  const ownerName = (listing as any).users?.display_name ?? "there";
+  const ownerName = (listing as any).public_users?.display_name ?? "there";
   const greeting = `Hi ${ownerName}, I'd like to swap for your listing "${listing.title}".`;
   const { error: merr } = await supabase
     .from("messages")

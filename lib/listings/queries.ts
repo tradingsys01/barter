@@ -95,7 +95,7 @@ export async function getListing(id: string): Promise<ListingDetail | null> {
       areas:area_id ( name ),
       categories:category_id ( name ),
       owner_id,
-      users:owner_id ( id, display_name ),
+      public_users:owner_id ( id, display_name ),
       listing_images ( path, alt_text, sort_order )
     `)
     .eq("id", id)
@@ -118,7 +118,7 @@ export async function getListing(id: string): Promise<ListingDetail | null> {
     created_at: data.created_at,
     owner: {
       id: (data as any).owner_id,
-      display_name: (data as any).users?.display_name ?? null,
+      display_name: (data as any).public_users?.display_name ?? null,
     },
     images,
   };

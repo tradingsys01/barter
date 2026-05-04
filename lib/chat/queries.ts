@@ -18,8 +18,8 @@ export async function listMyChats(userId: string): Promise<ChatListItem[]> {
     .select(`
       id, listing_id, last_message_at, initiator_id, owner_id,
       listing:listing_id ( id, title, slug, listing_images ( path, sort_order ) ),
-      initiator:initiator_id ( id, display_name ),
-      owner:owner_id ( id, display_name ),
+      initiator:public_users!initiator_id ( id, display_name ),
+      owner:public_users!owner_id ( id, display_name ),
       messages ( body, created_at )
     `)
     .order("last_message_at", { ascending: false });
@@ -66,8 +66,8 @@ export async function getChat(chatId: string): Promise<ChatHeader | null> {
     .select(`
       id, initiator_id, owner_id,
       listing:listing_id ( id, title, slug, owner_id, listing_images ( path, sort_order ) ),
-      initiator:initiator_id ( id, display_name ),
-      owner:owner_id ( id, display_name )
+      initiator:public_users!initiator_id ( id, display_name ),
+      owner:public_users!owner_id ( id, display_name )
     `)
     .eq("id", chatId)
     .maybeSingle();
