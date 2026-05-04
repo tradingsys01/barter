@@ -1,0 +1,95 @@
+import { createClient } from "@/lib/supabase/server";
+import type { FeedItem } from "@/lib/listings/queries";
+
+export type SearchInput = {
+  q?: string;
+  categorySlug?: string;
+  areaSlug?: string;
+  limit?: number;
+};
+
+export type SearchFilter = {
+  q?: string;
+  categorySlug?: string;
+  areaSlug?: string;
+};
+
+/**
+ * Pure: normalize search params. Trims, lowercases, drops too-short
+ * queries, escapes ilike wildcards, drops empty slugs.
+ */
+export function buildSearchFilter(input: SearchInput): SearchFilter {
+  const out: SearchFilter = {};
+  if (input.q != null) {
+    const trimmed = input.q.trim().toLowerCase();
+    if (trimmed.length >= 2) {
+      out.q = trimmed.replace(/[%_]/g, (c) => "\\" + c);
+    }
+  }
+  if (input.categorySlug && input.categorySlug.trim()) {
+    out.categorySlug = input.categorySlug.trim();
+  }
+  if (input.areaSlug && input.areaSlug.trim()) {
+    out.areaSlug = input.areaSlug.trim();
+  }
+  return out;
+}
+
+export async function searchListings(input: SearchInput): Promise<FeedItem[]> {
+  const filter = buildSearchFilter(input);
+  const supabase = await createClient();
+
+  // Resolve slugs to ids when present.
+  let categoryId: string | null = null;
+  if (filter.categorySlug) {
+    const { data } = await supabase
+      .from("categories")
+      .select("id")
+      .eq("slug", filter.categorySlug)
+      .maybeSingle();
+    categoryId = data?.id ?? null;
+    if (!categoryId) return [];
+  }
+  let areaId: string | null = null;
+  if (filter.areaSlug) {
+    const { data } = await supabase
+      .from("areas")
+      .select("id")
+      .eq("slug", filter.areaSlug)
+      .maybeSingle();
+    areaId = data?.id ?? null;
+    if (!areaId) return [];
+  }
+
+  let query = supabase
+    .from("listings")
+    .select(`
+      id, slug, title, type, status, created_at,
+      areas:area_id ( name ),
+      categories:category_id ( name ),
+      listing_images ( path, sort_order )
+    `)
+    .eq("status", "active");
+  if (categoryId) query = query.eq("category_id", categoryId);
+  if (areaId) query = query.eq("area_id", areaId);
+  if (filter.q) query = query.or(`title.ilike.%${filter.q}%,description.ilike.%${filter.q}%`);
+
+  const { data, error } = await query
+    .order("created_at", { ascending: false })
+    .limit(input.limit ?? 24);
+  if (error) throw error;
+
+  return (data ?? []).map((r: any) => ({
+    id: r.id,
+    slug: r.slug,
+    title: r.title,
+    type: r.type,
+    status: r.status,
+    area_name: r.areas?.name ?? null,
+    category_name: r.categories?.name ?? null,
+    cover_path: (r.listing_images ?? [])
+      .slice()
+      .sort((a: any, b: any) => a.sort_order - b.sort_order)[0]?.path ?? null,
+    created_at: r.created_at,
+  }));
+}
