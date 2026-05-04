@@ -95,7 +95,7 @@ export async function getListing(id: string): Promise<ListingDetail | null> {
       areas:area_id ( name ),
       categories:category_id ( name ),
       owner_id,
-      public_users:owner_id ( id, display_name ),
+      public_users!owner_id ( id, display_name ),
       listing_images ( path, alt_text, sort_order )
     `)
     .eq("id", id)
