@@ -44,8 +44,10 @@ next-env.d.ts
 # brainstorm artifacts
 .superpowers/
 
-# supabase volumes
-supabase/volumes/
+# supabase volumes — only runtime data; config files ship with the repo
+supabase/volumes/db/data/
+supabase/volumes/storage/
+supabase/volumes/logs/*.log
 supabase/.env
 
 # test artifacts
