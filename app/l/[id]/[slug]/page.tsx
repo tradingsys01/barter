@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { TypeBadge } from "@/components/listings/type-badge";
 import { OfferButton } from "@/components/listings/offer-button";
+import { ReportButton } from "@/components/listings/report-button";
 import { listingImageUrl } from "@/lib/img";
 import { getListing } from "@/lib/listings/queries";
 import { getRatingSummary } from "@/lib/rating/queries";
@@ -118,6 +119,12 @@ export default async function ListingPage({ params }: { params: Promise<Params> 
         )}{" "}
         <RatingSummary summary={ownerRating} />
       </p>
+
+      {viewer && viewer.id !== l.owner.id && (
+        <div className="pt-2">
+          <ReportButton targetType="listing" targetId={l.id} />
+        </div>
+      )}
     </main>
   );
 }
