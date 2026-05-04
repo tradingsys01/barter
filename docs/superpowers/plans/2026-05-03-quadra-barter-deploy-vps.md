@@ -79,7 +79,7 @@ ls -la /opt/barter 2>/dev/null || echo "no /opt/barter — clean"
 | No reverse proxy | Install Caddy fresh and own 80/443. Document the change. |
 | Port 5432 is in use | Override `supabase-db` to publish only on `127.0.0.1:54322` (private to host). |
 | Port 8000 is in use | Override Kong to publish only on `127.0.0.1:54321`. Reverse proxy hits localhost:54321. |
-| `<deploy-user>` is not in `docker` group | `usermod -aG docker prdr`, log out + back in. |
+| `<deploy-user>` is not in `docker` group | `usermod -aG docker <deploy-user>`, log out + back in. |
 | Disk free < 15 GB at `/` | Move the deploy to a larger mount (e.g. `/data/barter`); update systemd unit `WorkingDirectory`. |
 | Docker not installed | Install via official apt repo (extra confirmation needed; affects whole-server). |
 
@@ -90,11 +90,11 @@ ls -la /opt/barter 2>/dev/null || echo "no /opt/barter — clean"
 ## Phase 1 — Pre-flight (no service changes)
 
 ```bash
-# 1.1 — Create the install directory owned by prdr
-sudo install -d -o prdr -g prdr /opt/barter
+# 1.1 — Create the install directory owned by <deploy-user>
+sudo install -d -o <deploy-user> -g <deploy-user> /opt/barter
 
 # 1.2 — Clone the repo
-sudo -u prdr git clone https://github.com/tradingsys01/barter.git /opt/barter
+sudo -u <deploy-user> git clone https://github.com/tradingsys01/barter.git /opt/barter
 cd /opt/barter
 
 # 1.3 — Install Node 20 if not present
@@ -105,8 +105,8 @@ node --version  # expect v20.x
 # 1.4 — Install pnpm if not present
 which pnpm || sudo npm install -g pnpm@10
 
-# 1.5 — Install JS deps as prdr (read-only on system)
-sudo -u prdr -i bash -c 'cd /opt/barter && pnpm install --frozen-lockfile'
+# 1.5 — Install JS deps as <deploy-user> (read-only on system)
+sudo -u <deploy-user> -i bash -c 'cd /opt/barter && pnpm install --frozen-lockfile'
 ```
 
 Rollback: `rm -rf /opt/barter` (no system services touched yet).
@@ -125,14 +125,14 @@ Everything else stays inside the docker network.
 ```bash
 # 2.1 — Generate fresh production secrets (NEVER reuse local-dev demo keys)
 cd /opt/barter
-sudo -u prdr cp supabase/.env.example supabase/.env
+sudo -u <deploy-user> cp supabase/.env.example supabase/.env
 
 # Postgres + dashboard passwords (random)
 PG_PASSWORD=$(openssl rand -hex 24)
 DASH_PASSWORD=$(openssl rand -hex 24)
 JWT_SECRET=$(openssl rand -base64 48 | tr -d '/+=' | head -c 64)
 
-sudo -u prdr sed -i \
+sudo -u <deploy-user> sed -i \
   -e "s|^POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=$PG_PASSWORD|" \
   -e "s|^DASHBOARD_PASSWORD=.*|DASHBOARD_PASSWORD=$DASH_PASSWORD|" \
   -e "s|^JWT_SECRET=.*|JWT_SECRET=$JWT_SECRET|" \
@@ -143,7 +143,7 @@ sudo -u prdr sed -i \
 
 # 2.2 — Generate ANON_KEY and SERVICE_ROLE_KEY JWTs from JWT_SECRET
 # (We'll use a small Node script — Supabase doesn't ship a CLI for this offline.)
-sudo -u prdr -i bash <<'GEN'
+sudo -u <deploy-user> -i bash <<'GEN'
 cd /opt/barter
 node -e '
 const jwt = require("jsonwebtoken");
@@ -165,7 +165,7 @@ GEN
 
 # 2.3 — Create docker-compose.override.yml that pins ports + drops Mailpit
 # (Production sends via Resend — Mailpit is dev-only.)
-sudo -u prdr tee supabase/docker-compose.override.yml > /dev/null <<'YML'
+sudo -u <deploy-user> tee supabase/docker-compose.override.yml > /dev/null <<'YML'
 # Production overrides: bind only to localhost; reverse proxy bridges 443 → 54321.
 services:
   kong:
@@ -215,7 +215,7 @@ YML
 echo
 echo "Paste your Resend API key now (input is hidden):"
 read -s RESEND_API_KEY_VALUE
-sudo -u prdr bash -c "echo 'RESEND_API_KEY=$RESEND_API_KEY_VALUE' >> /opt/barter/supabase/.env"
+sudo -u <deploy-user> bash -c "echo 'RESEND_API_KEY=$RESEND_API_KEY_VALUE' >> /opt/barter/supabase/.env"
 unset RESEND_API_KEY_VALUE
 ```
 
@@ -228,10 +228,10 @@ Rollback: `rm -rf /opt/barter/supabase/.env /opt/barter/supabase/docker-compose.
 ```bash
 # 3.1 — Pull images (~6 GB; takes a few minutes on first run)
 cd /opt/barter/supabase
-sudo -u prdr docker compose pull
+sudo -u <deploy-user> docker compose pull
 
 # 3.2 — Start
-sudo -u prdr docker compose up -d
+sudo -u <deploy-user> docker compose up -d
 
 # 3.3 — Watch healthchecks (loop until all healthy or 5 min)
 for i in {1..30}; do
@@ -256,7 +256,7 @@ Rollback: `cd /opt/barter/supabase && docker compose down -v` (the `-v` wipes th
 ```bash
 # 4.1 — Apply migrations 0001..0013 in order, then the seed
 cd /opt/barter
-sudo -u prdr bash -c '
+sudo -u <deploy-user> bash -c '
   for f in supabase/migrations/*.sql; do
     echo "applying $f"
     docker exec -i supabase-db psql -U postgres -d postgres < "$f"
@@ -280,7 +280,7 @@ Rollback: drop and recreate the database, then re-run from 3.4. Or `docker compo
 ANON_KEY=$(grep '^ANON_KEY=' /opt/barter/supabase/.env | cut -d= -f2-)
 SERVICE_KEY=$(grep '^SERVICE_ROLE_KEY=' /opt/barter/supabase/.env | cut -d= -f2-)
 
-sudo -u prdr tee /opt/barter/.env.production > /dev/null <<EOF
+sudo -u <deploy-user> tee /opt/barter/.env.production > /dev/null <<EOF
 NEXT_PUBLIC_SUPABASE_URL=https://api.barter.your-domain.example
 NEXT_PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY
 SUPABASE_SERVICE_ROLE_KEY=$SERVICE_KEY
@@ -290,10 +290,10 @@ NODE_ENV=production
 PORT=3001
 EOF
 sudo chmod 600 /opt/barter/.env.production
-sudo chown prdr:prdr /opt/barter/.env.production
+sudo chown <deploy-user>:<deploy-user> /opt/barter/.env.production
 
 # 5.2 — Build (using the env file so build-time NEXT_PUBLIC_* are baked in)
-sudo -u prdr -i bash -c 'cd /opt/barter && set -a && source .env.production && set +a && pnpm build'
+sudo -u <deploy-user> -i bash -c 'cd /opt/barter && set -a && source .env.production && set +a && pnpm build'
 
 # 5.3 — Systemd unit (port 3001 to avoid colliding with anything on 3000)
 sudo tee /etc/systemd/system/barter.service > /dev/null <<'UNIT'
@@ -309,8 +309,8 @@ EnvironmentFile=/opt/barter/.env.production
 ExecStart=/usr/bin/pnpm start -- -p 3001
 Restart=on-failure
 RestartSec=5
-User=prdr
-Group=prdr
+User=<deploy-user>
+Group=<deploy-user>
 
 # Hardening
 NoNewPrivileges=true
@@ -463,16 +463,16 @@ curl -sS https://barter.your-domain.example/robots.txt  | head -3
 ```bash
 # Add deploy notes + Caddyfile/nginx config to the repo (sanitized)
 cd /opt/barter
-sudo -u prdr mkdir -p deploy
-sudo -u prdr cp /etc/caddy/sites-enabled/barter.caddy deploy/Caddyfile  # or nginx variant
-sudo -u prdr tee deploy/README.md > /dev/null <<'DEPLOY'
+sudo -u <deploy-user> mkdir -p deploy
+sudo -u <deploy-user> cp /etc/caddy/sites-enabled/barter.caddy deploy/Caddyfile  # or nginx variant
+sudo -u <deploy-user> tee deploy/README.md > /dev/null <<'DEPLOY'
 # Production deploy notes
 
 This server runs Quadra Barter at:
 - https://barter.your-domain.example       (Next.js UI)
 - https://api.barter.your-domain.example   (Supabase Kong gateway)
 
-Stack lives at /opt/barter, owned by prdr.
+Stack lives at /opt/barter, owned by <deploy-user>.
 
 ## Service operations
 
@@ -497,9 +497,9 @@ Bound only to localhost:54323. SSH-tunnel to use it:
 Then visit http://localhost:54323
 DEPLOY
 
-sudo -u prdr git -C /opt/barter add deploy/
-sudo -u prdr git -C /opt/barter commit -m "chore(deploy): production deploy notes"
-sudo -u prdr git -C /opt/barter push
+sudo -u <deploy-user> git -C /opt/barter add deploy/
+sudo -u <deploy-user> git -C /opt/barter commit -m "chore(deploy): production deploy notes"
+sudo -u <deploy-user> git -C /opt/barter push
 ```
 
 ---
