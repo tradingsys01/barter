@@ -1,5 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 import { TypeBadge } from "@/components/listings/type-badge";
 import { OfferButton } from "@/components/listings/offer-button";
 import { listingImageUrl } from "@/lib/img";
@@ -107,7 +108,14 @@ export default async function ListingPage({ params }: { params: Promise<Params> 
       )}
 
       <p className="text-sm text-zinc-500">
-        Posted by {l.owner.display_name ?? "someone"}{" "}
+        Posted by{" "}
+        {l.owner.id ? (
+          <Link href={`/u/${l.owner.id}`} className="font-medium text-zinc-700 hover:underline">
+            {l.owner.display_name ?? "an islander"}
+          </Link>
+        ) : (
+          <>{l.owner.display_name ?? "someone"}</>
+        )}{" "}
         <RatingSummary summary={ownerRating} />
       </p>
     </main>
