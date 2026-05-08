@@ -55,3 +55,54 @@ async function waitForMagicLink(
   }
   throw new Error(`No magic link in Mailpit for ${email}`);
 }
+
+/**
+ * Same flow as signInViaMailpit but takes the OTP code path:
+ *   /signin → request link → poll Mailpit for the 6-digit code → submit on /signin
+ *   → /auth/callback flow in-server → if /onboarding, fill form.
+ */
+export async function signInViaMailpitCode(
+  page: Page,
+  request: APIRequestContext,
+  displayName: string,
+): Promise<string> {
+  const email = `quadra-test-${Date.now()}-${Math.random().toString(36).slice(2, 6)}@example.com`;
+  await page.goto("/signin");
+  await page.getByLabel(/email/i).fill(email);
+  await page.getByRole("button", { name: /send link/i }).click();
+
+  const code = await waitForOtpCode(email, request);
+  await page.getByLabel(/code/i).fill(code);
+  await page.getByRole("button", { name: /verify/i }).click();
+  await page.waitForURL(/\/(me|onboarding)/, { timeout: 15_000 });
+  if (page.url().includes("/onboarding")) {
+    await page.getByLabel(/display name/i).fill(displayName);
+    await page.locator("select#area_id").selectOption({ label: "Quathiaski Cove" });
+    await page.getByRole("button", { name: /continue/i }).click();
+    await page.waitForURL(/\/me/, { timeout: 15_000 });
+  }
+  return email;
+}
+
+async function waitForOtpCode(
+  email: string,
+  request: APIRequestContext,
+): Promise<string> {
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const search = await request.get(
+      `${MAILPIT_URL}/api/v1/search?query=${encodeURIComponent(`to:${email}`)}`,
+    );
+    if (search.ok()) {
+      const { messages = [] } = await search.json();
+      if (messages.length > 0) {
+        const msgRes = await request.get(`${MAILPIT_URL}/api/v1/message/${messages[0].ID}`);
+        const msg = await msgRes.json();
+        const haystack = `${msg.Text ?? ""}\n${msg.HTML ?? ""}`;
+        const m = haystack.match(/enter the code:\s*(\d{6})/i);
+        if (m) return m[1];
+      }
+    }
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  throw new Error(`No OTP code in Mailpit for ${email}`);
+}
