@@ -212,6 +212,8 @@ set -a; source /opt/barter/.env.production; set +a
 pnpm build
 ```
 
+> **Footgun.** `NEXT_PUBLIC_*` vars are inlined into the **client bundle at build time**. If you run a bare `pnpm build` without sourcing `/opt/barter/.env.production` first, those vars are undefined in the browser and `createBrowserClient` throws *"Your project's URL and API key are required"* on the first auth-touching client interaction (e.g. Sign out). The systemd `EnvironmentFile=` only covers runtime — it cannot retroactively fix a stale build. Always export the env before `pnpm build`, or use `pnpm exec dotenv -e /opt/barter/.env.production -- pnpm build`. After fixing, browsers may need a hard refresh to drop the cached broken bundle.
+
 ## 10. Systemd unit
 
 `/etc/systemd/system/barter.service`:
