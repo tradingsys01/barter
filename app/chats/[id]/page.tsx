@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
-import { getChat, getMessages } from "@/lib/chat/queries";
+import { getChat, getMessages, markChatRead } from "@/lib/chat/queries";
 import { listingImageUrl } from "@/lib/img";
 import { ChatPoller } from "@/components/chat/chat-poller";
 import { MessageList } from "@/components/chat/message-list";
@@ -30,6 +30,7 @@ export default async function ChatPage({ params }: { params: Promise<Params> }) 
   if (chat.initiator.id !== user.id && chat.owner.id !== user.id) notFound();
 
   const messages = await getMessages(id);
+  await markChatRead(id, user.id);
   const [pendingTrade, completedTrades] = await Promise.all([
     getActiveTradeForChat(id),
     getCompletedTradesForChat(id),

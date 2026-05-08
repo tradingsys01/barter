@@ -119,3 +119,42 @@ export async function getMessages(chatId: string): Promise<Message[]> {
   if (error) throw error;
   return (data ?? []) as Message[];
 }
+
+/**
+ * Number of chats with messages the user hasn't seen yet. The trigger on
+ * messages already advances the sender's last_read_at, so an outgoing
+ * message never counts as unread for the sender.
+ */
+export async function getUnreadChatCount(userId: string): Promise<number> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("chats")
+    .select("id, initiator_id, owner_id, last_message_at, initiator_last_read_at, owner_last_read_at");
+  if (error || !data) return 0;
+  return data.reduce((n, c) => {
+    const lastRead = c.initiator_id === userId ? c.initiator_last_read_at : c.owner_last_read_at;
+    return n + (new Date(c.last_message_at) > new Date(lastRead) ? 1 : 0);
+  }, 0);
+}
+
+/**
+ * Mark the viewer's side of a chat as read up to now. RLS only lets the
+ * two parties update their own chat row.
+ */
+export async function markChatRead(chatId: string, userId: string): Promise<void> {
+  const supabase = await createClient();
+  const { data: chat } = await supabase
+    .from("chats")
+    .select("initiator_id, owner_id")
+    .eq("id", chatId)
+    .maybeSingle();
+  if (!chat) return;
+  const patch =
+    chat.initiator_id === userId
+      ? { initiator_last_read_at: new Date().toISOString() }
+      : chat.owner_id === userId
+      ? { owner_last_read_at: new Date().toISOString() }
+      : null;
+  if (!patch) return;
+  await supabase.from("chats").update(patch).eq("id", chatId);
+}
