@@ -3,17 +3,16 @@ import { searchListings } from "@/lib/listings/search";
 import { ListingGrid } from "@/components/listings/listing-grid";
 import { SearchBar } from "@/components/feed/search-bar";
 import { CategoryChips } from "@/components/feed/category-chips";
+import { getSessionUser } from "@/lib/auth";
 
 export default async function HomePage(
   { searchParams }: { searchParams: Promise<{ q?: string; c?: string; a?: string }> },
 ) {
   const sp = await searchParams;
-  const items = await searchListings({
-    q: sp.q,
-    categorySlug: sp.c,
-    areaSlug: sp.a,
-    limit: 24,
-  });
+  const [items, user] = await Promise.all([
+    searchListings({ q: sp.q, categorySlug: sp.c, areaSlug: sp.a, limit: 24 }),
+    getSessionUser(),
+  ]);
 
   const isFiltered = !!(sp.q || sp.c || sp.a);
 
@@ -25,12 +24,14 @@ export default async function HomePage(
             Swap goods and services on Quadra Island
           </h1>
           <p className="text-zinc-600">No money. Just neighbours trading what they have for what they need.</p>
-          <Link
-            href="/signin"
-            className="inline-block rounded bg-emerald-700 px-4 py-2 text-white"
-          >
-            Get started
-          </Link>
+          {!user && (
+            <Link
+              href="/signin"
+              className="inline-block rounded bg-emerald-700 px-4 py-2 text-white"
+            >
+              Get started
+            </Link>
+          )}
         </section>
       )}
 
