@@ -35,3 +35,23 @@ test("feed filters by search query and category chip", async ({ page, request })
   await expect(page.getByRole("link", { name: /unrelated tools/i }).first()).toBeVisible();
   await expect(page.getByRole("link", { name: /search target apples/i })).toHaveCount(0);
 });
+
+test("clearing the search drops q from the URL and preserves other filters", async ({
+  page,
+  request,
+}) => {
+  await signInViaMailpit(page, request, "Clearer Carla");
+
+  // Land on a filtered URL: query + category.
+  await page.goto("/?q=jar&c=tools");
+  // Submit with the field emptied — q should drop, c should stay.
+  const search = page.getByPlaceholder(/search/i);
+  await search.fill("");
+  await search.press("Enter");
+  await expect(page).toHaveURL(/\/\?(?!.*\bq=).*c=tools/);
+
+  // Clear via the × button after typing — also drops q.
+  await page.goto("/?q=jar");
+  await page.getByRole("button", { name: /clear search/i }).click();
+  await expect(page).toHaveURL("/");
+});
