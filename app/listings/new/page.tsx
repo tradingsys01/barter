@@ -83,11 +83,6 @@ export default async function NewListingPage() {
           />
         </Field>
 
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" name="accepts_credits" />
-          Also accept community credits
-        </label>
-
         <PhotoUploader name="photos" />
 
         <button type="submit" className="rounded bg-emerald-700 px-4 py-2 text-white">
