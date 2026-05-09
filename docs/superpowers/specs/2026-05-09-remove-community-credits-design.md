@@ -64,7 +64,7 @@ alter table public.listings drop column accepts_credits;
 After the change:
 - `pnpm vitest run` passes.
 - `pnpm tsc --noEmit` reports no errors. Type narrowing on `ListingDetail` no longer mentions `accepts_credits`.
-- `grep -RIniE 'accepts_credits' --exclude-dir=node_modules --exclude-dir=.next --exclude-dir=docs --exclude-dir=.git .` returns zero hits.
+- `grep -RIniE 'accepts_credits' --exclude-dir=node_modules --exclude-dir=.next --exclude-dir=docs --exclude-dir=.git .` returns hits in only two places, both intentional: the original column-creating migration `supabase/migrations/0003_listings.sql` (historical record — must not be rewritten) and a new permanent regression test added in the implementation plan. Anything else is a leftover and must be removed.
 - Manual smoke: load `/listings/new`, fill in the form, publish — no checkbox visible, listing publishes cleanly. Load `/me/listings/[id]/edit` for an existing listing — no checkbox visible, edit submits cleanly. Load `/l/[id]/[slug]` — detail page renders.
 - The migration runs cleanly against a freshly-migrated database (the fixture data already has `accepts_credits = false` everywhere).
 
