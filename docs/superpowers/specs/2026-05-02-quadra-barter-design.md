@@ -4,6 +4,8 @@
 **Status:** Design (pre-implementation)
 **Author:** brainstormed with the user
 
+> **Partially superseded.** The community-credits sections (Section 4 paragraph 2; the `credits_ledger` and `credits_transferred` data-model entries in Section 6; the corresponding flow steps in Section 8) were removed by `docs/superpowers/specs/2026-05-09-remove-community-credits-design.md`. The rest of this document still applies.
+
 ## 1. Overview
 
 A mobile-first Progressive Web App that lets Quadra Island residents and visiting tourists swap goods and services without using money. The app is a public listing board with email-based accounts, lightweight ratings, and an optional community-credits system for time-shifted (especially service) trades.
