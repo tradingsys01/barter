@@ -21,6 +21,12 @@ export async function maybeSendChatEmail(
   senderId: string,
   body: string,
 ): Promise<void> {
+  const appUrl = process.env.APP_URL;
+  if (!appUrl) {
+    console.error("[chat-email] APP_URL is not set; skipping send", { chatId, senderId });
+    return;
+  }
+
   const db = admin();
 
   const { data: chat } = await db
@@ -64,7 +70,6 @@ export async function maybeSendChatEmail(
   const recipientName = rec.display_name ?? "there";
   const listingTitle = listing?.title ?? "your listing";
   const token = signUnsubscribeToken(recipientId, "chat_email");
-  const appUrl = process.env.APP_URL ?? "";
   const unsubUrl = `${appUrl}/unsubscribe?token=${encodeURIComponent(token)}`;
   const chatUrl = `${appUrl}/chats/${chatId}`;
   const truncated = truncate(body, MAX_BODY_CHARS);
@@ -91,6 +96,13 @@ export async function maybeSendChatEmail(
     });
   } catch (err) {
     console.error("[chat-email] send failed; resetting flag", { chatId, recipientId, err: String(err) });
-    await db.from("chats").update({ [flagCol]: false }).eq("id", chatId);
+    try {
+      await db.from("chats").update({ [flagCol]: false }).eq("id", chatId);
+    } catch (resetErr) {
+      console.error(
+        "[chat-email] CRITICAL: flag reset failed; chat now permanently muted until DB fix",
+        { chatId, recipientId, resetErr: String(resetErr) },
+      );
+    }
   }
 }

@@ -163,4 +163,17 @@ describe("maybeSendChatEmail — gate", () => {
     expect(text).toContain("a".repeat(500) + "…");
     expect(text).not.toContain("a".repeat(501));
   });
+
+  it("skips with an error log when APP_URL is unset", async () => {
+    delete process.env.APP_URL;
+    const errLog = vi.spyOn(console, "error").mockImplementation(() => {});
+    const { maybeSendChatEmail } = await import("@/lib/chat/notify");
+    await maybeSendChatEmail("c1", "u-init", "x");
+    expect(sendEmailMock).not.toHaveBeenCalled();
+    expect(errLog).toHaveBeenCalledWith(
+      expect.stringContaining("APP_URL"),
+      expect.any(Object),
+    );
+    errLog.mockRestore();
+  });
 });
