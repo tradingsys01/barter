@@ -2,6 +2,8 @@
 
 End-to-end guide for self-hosting Quadra Barter on a single Linux VPS. This was used to bring up the live instance.
 
+> **Updating an existing deploy?** Use [`deploy/UPDATING.md`](./UPDATING.md). This file is the *first-time bringup* guide.
+
 The guide assumes:
 - A Linux server (Ubuntu 20.04+) with sudo access
 - Docker + docker-compose-plugin
@@ -380,7 +382,7 @@ sudo systemctl restart barter
 | Restart Next.js | `sudo systemctl restart barter` |
 | Restart Supabase | `cd /opt/barter/repo/supabase && docker compose restart` |
 | Reload nginx | `sudo nginx -t && sudo systemctl reload nginx` |
-| Update the app | `cd /opt/barter/repo && git pull && pnpm install --frozen-lockfile && set -a && source /opt/barter/.env.production && set +a && pnpm build && sudo systemctl restart barter` |
+| Update the app | See [`deploy/UPDATING.md`](./UPDATING.md) — short version: `cd /opt/barter/repo && git pull && pnpm install --frozen-lockfile && set -a && source /opt/barter/.env.production && set +a && pnpm build && sudo systemctl restart barter` |
 | Apply a new migration | `docker exec -i supabase-db psql -U postgres -d postgres < supabase/migrations/00NN_*.sql` |
 | Studio access (admin UI) | `ssh -L 54323:127.0.0.1:54323 user@host`, then http://localhost:54323 |
 
