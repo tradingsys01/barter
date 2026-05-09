@@ -81,7 +81,6 @@ export async function listByArea(slug: string, limit = 60): Promise<FeedItem[]> 
 export type ListingDetail = FeedItem & {
   description: string | null;
   wants_text: string | null;
-  accepts_credits: boolean;
   owner: { id: string; display_name: string | null };
   images: { path: string; alt_text: string | null; sort_order: number }[];
 };
@@ -91,7 +90,7 @@ export async function getListing(id: string): Promise<ListingDetail | null> {
   const { data, error } = await supabase
     .from("listings")
     .select(`
-      id, slug, title, type, status, description, wants_text, accepts_credits, created_at,
+      id, slug, title, type, status, description, wants_text, created_at,
       areas:area_id ( name ),
       categories:category_id ( name ),
       owner_id,
@@ -111,7 +110,6 @@ export async function getListing(id: string): Promise<ListingDetail | null> {
     status: (data as any).status,
     description: data.description,
     wants_text: data.wants_text,
-    accepts_credits: data.accepts_credits,
     area_name: (data as any).areas?.name ?? null,
     category_name: (data as any).categories?.name ?? null,
     cover_path: images[0]?.path ?? null,
