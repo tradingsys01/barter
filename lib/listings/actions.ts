@@ -17,7 +17,6 @@ export async function createListing(form: FormData): Promise<void> {
     category_id: form.get("category_id"),
     area_id: form.get("area_id"),
     wants_text: form.get("wants_text") || undefined,
-    accepts_credits: form.get("accepts_credits") === "on",
   };
   const parsed = createListingSchema.parse(raw);
 
@@ -64,7 +63,6 @@ export async function editListing(form: FormData): Promise<void> {
     category_id: form.get("category_id") || undefined,
     area_id: form.get("area_id") || undefined,
     wants_text: form.get("wants_text") || undefined,
-    accepts_credits: form.get("accepts_credits") === "on",
   };
   const parsed = editListingSchema.parse(raw);
   const supabase = await createClient();

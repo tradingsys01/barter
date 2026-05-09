@@ -8,7 +8,6 @@ const valid = {
   category_id: "11111111-1111-1111-1111-111111111111",
   area_id:     "22222222-2222-2222-2222-222222222222",
   wants_text: "Eggs or jam",
-  accepts_credits: false,
 };
 
 describe("createListingSchema", () => {
