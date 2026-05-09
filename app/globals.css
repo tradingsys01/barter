@@ -2,6 +2,13 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* Tailwind v4 auto-detects content sources by walking the project tree.
+   Without this exclusion, Turbopack's track_glob descends into
+   supabase/volumes/db/data (root-owned by the postgres docker container)
+   and panics with "Permission denied". Excluding that subtree at the
+   Tailwind level keeps the glob from ever reaching it. */
+@source not "../supabase/volumes/**";
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
