@@ -17,7 +17,24 @@ function angle(addr: string): string {
   return m ? m[1] : addr.trim();
 }
 
+function assertNoCRLF(value: string, field: string): void {
+  if (/\r|\n/.test(value)) {
+    throw new Error(`Invalid SMTP value (CRLF in ${field}): ${value.slice(0, 50)}`);
+  }
+}
+
+function dotStuff(text: string): string {
+  return text.replace(/\r?\n\./g, (m) => m.slice(0, -1) + "..");
+}
+
 export async function sendViaInbucket(input: InbucketInput): Promise<void> {
+  assertNoCRLF(input.from, "from");
+  assertNoCRLF(input.to, "to");
+  assertNoCRLF(input.subject, "subject");
+  for (const [k, v] of Object.entries(input.headers ?? {})) {
+    assertNoCRLF(k, `header name "${k}"`);
+    assertNoCRLF(v, `header value for "${k}"`);
+  }
   const sock = createConnection({ host: HOST, port: PORT });
   const lines: string[] = [];
   let buf = "";
@@ -46,23 +63,26 @@ export async function sendViaInbucket(input: InbucketInput): Promise<void> {
     throw new Error(`inbucket no response to: ${line}`);
   }
 
-  await cmd(`HELO localhost`);
-  await cmd(`MAIL FROM:<${angle(input.from)}>`);
-  await cmd(`RCPT TO:<${angle(input.to)}>`);
-  await cmd(`DATA`);
-  const body =
-    `From: ${input.from}\r\n` +
-    `To: ${input.to}\r\n` +
-    `Subject: ${input.subject}\r\n` +
-    Object.entries(input.headers ?? {})
-      .map(([k, v]) => `${k}: ${v}\r\n`)
-      .join("") +
-    `Content-Type: text/plain; charset=utf-8\r\n` +
-    `\r\n` +
-    input.text + `\r\n` +
-    `.\r\n`;
-  sock.write(body);
-  await new Promise((r) => setTimeout(r, 50));
-  await cmd(`QUIT`);
-  sock.end();
+  try {
+    await cmd(`HELO localhost`);
+    await cmd(`MAIL FROM:<${angle(input.from)}>`);
+    await cmd(`RCPT TO:<${angle(input.to)}>`);
+    await cmd(`DATA`);
+    const body =
+      `From: ${input.from}\r\n` +
+      `To: ${input.to}\r\n` +
+      `Subject: ${input.subject}\r\n` +
+      Object.entries(input.headers ?? {})
+        .map(([k, v]) => `${k}: ${v}\r\n`)
+        .join("") +
+      `Content-Type: text/plain; charset=utf-8\r\n` +
+      `\r\n` +
+      dotStuff(input.text) + `\r\n` +
+      `.\r\n`;
+    sock.write(body);
+    await new Promise((r) => setTimeout(r, 50));
+    await cmd(`QUIT`);
+  } finally {
+    sock.destroy();
+  }
 }
