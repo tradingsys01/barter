@@ -2,9 +2,11 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import { sendMessageSchema } from "@/lib/chat/validation";
+import { maybeSendChatEmail } from "@/lib/chat/notify";
 
 /**
  * Open (or reopen) a chat between the current user and the listing owner.
@@ -73,6 +75,14 @@ export async function sendMessage(formData: FormData): Promise<void> {
     .from("messages")
     .insert({ chat_id: parsed.chat_id, sender_id: user.id, body: parsed.body });
   if (error) throw new Error(error.message);
+
+  after(async () => {
+    try {
+      await maybeSendChatEmail(parsed.chat_id, user.id, parsed.body);
+    } catch (err) {
+      console.error("[sendMessage] notify failed", { chat_id: parsed.chat_id, err: String(err) });
+    }
+  });
 
   revalidatePath(`/chats/${parsed.chat_id}`);
   revalidatePath("/chats");
