@@ -60,6 +60,14 @@ export async function startChat(formData: FormData): Promise<void> {
     .insert({ chat_id: chat.id, sender_id: user.id, body: greeting });
   if (merr) throw new Error(merr.message);
 
+  after(async () => {
+    try {
+      await maybeSendChatEmail(chat.id, user.id, greeting);
+    } catch (err) {
+      console.error("[startChat] notify failed", { chat_id: chat.id, err: String(err) });
+    }
+  });
+
   redirect(`/chats/${chat.id}`);
 }
 
@@ -75,14 +83,6 @@ export async function sendMessage(formData: FormData): Promise<void> {
     .from("messages")
     .insert({ chat_id: parsed.chat_id, sender_id: user.id, body: parsed.body });
   if (error) throw new Error(error.message);
-
-  after(async () => {
-    try {
-      await maybeSendChatEmail(parsed.chat_id, user.id, parsed.body);
-    } catch (err) {
-      console.error("[sendMessage] notify failed", { chat_id: parsed.chat_id, err: String(err) });
-    }
-  });
 
   revalidatePath(`/chats/${parsed.chat_id}`);
   revalidatePath("/chats");
