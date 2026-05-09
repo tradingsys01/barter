@@ -36,6 +36,26 @@ test("feed filters by search query and category chip", async ({ page, request })
   await expect(page.getByRole("link", { name: /search target apples/i })).toHaveCount(0);
 });
 
+test("search stems related word forms (excavator <-> excavation)", async ({
+  page,
+  request,
+}) => {
+  await signInViaMailpit(page, request, "Stemming Steve");
+
+  await page.goto("/listings/new");
+  await page.getByLabel(/type/i).selectOption("offer_service");
+  await page.getByLabel(/title/i).fill("Excavator work for hire");
+  await page.locator("select[name=category_id]").selectOption({ label: "Tools" });
+  await page.locator("select[name=area_id]").selectOption({ label: "Quathiaski Cove" });
+  await page.getByRole("button", { name: /publish/i }).click();
+  await expect(page).toHaveURL(/\/l\/[0-9a-f-]+\//);
+
+  // Searching for "excavation" should still match the "excavator" listing
+  // because both stem to "excavat" under the english config.
+  await page.goto("/?q=excavation");
+  await expect(page.getByRole("link", { name: /excavator work for hire/i }).first()).toBeVisible();
+});
+
 test("clearing the search drops q from the URL and preserves other filters", async ({
   page,
   request,

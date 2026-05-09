@@ -15,23 +15,17 @@ export type SearchFilter = {
 };
 
 /**
- * Escape a string for use as a value inside a PostgREST .or() filter.
- * Wraps in double quotes and escapes embedded backslashes and quotes.
- */
-export function escapeOrValue(s: string): string {
-  return `"${s.replace(/[\\"]/g, "\\$&")}"`;
-}
-
-/**
  * Pure: normalize search params. Trims, lowercases, drops too-short
- * queries, escapes ilike wildcards, drops empty slugs.
+ * queries, drops empty slugs. The q is fed to PostgREST .textSearch with
+ * the websearch parser, which safely handles arbitrary user input
+ * (quotes, dashes, "or"), so no escaping is needed here.
  */
 export function buildSearchFilter(input: SearchInput): SearchFilter {
   const out: SearchFilter = {};
   if (input.q != null) {
     const trimmed = input.q.trim().toLowerCase();
     if (trimmed.length >= 2) {
-      out.q = trimmed.replace(/[%_]/g, (c) => "\\" + c);
+      out.q = trimmed;
     }
   }
   if (input.categorySlug && input.categorySlug.trim()) {
@@ -81,8 +75,10 @@ export async function searchListings(input: SearchInput): Promise<FeedItem[]> {
   if (categoryId) query = query.eq("category_id", categoryId);
   if (areaId) query = query.eq("area_id", areaId);
   if (filter.q) {
-    const pattern = escapeOrValue(`%${filter.q}%`);
-    query = query.or(`title.ilike.${pattern},description.ilike.${pattern}`);
+    query = query.textSearch("search_tsv", filter.q, {
+      type: "websearch",
+      config: "english",
+    });
   }
 
   const { data, error } = await query
