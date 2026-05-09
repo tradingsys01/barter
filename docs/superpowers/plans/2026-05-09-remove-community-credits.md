@@ -714,10 +714,13 @@ Run:
 grep -RIniE 'accepts_credits' --exclude-dir=node_modules --exclude-dir=.next --exclude-dir=docs --exclude-dir=.git --exclude-dir=test-results .
 ```
 
-Expected: hits in exactly two places:
+Expected: hits in exactly three places, all of them intentional:
 
-1. `supabase/migrations/0003_listings.sql` — the original migration that *added* the column. This is a historical record and must NOT be rewritten. Past migrations describe what the schema looked like at a point in time; the new migration `0015_drop_accepts_credits.sql` describes the deletion.
-2. `tests/unit/listings-no-credits.test.ts` — the regression-guard test from Task 1 (intentional; this file exists *because* the field was removed).
+1. `supabase/migrations/0003_listings.sql` — the original migration that *added* the column. Historical record; must NOT be rewritten.
+2. `supabase/migrations/0015_drop_accepts_credits.sql` — the new migration from Task 7 that *drops* the column. Naturally names the column it's removing.
+3. `tests/unit/listings-no-credits.test.ts` — the regression-guard test from Task 1.
+
+Together: 0003 says "added at this point", 0015 says "removed at this point", and the test guards against a silent re-introduction.
 
 If you see hits anywhere else, stop and remove them. The acceptance bar for this plan is: zero live `accepts_credits` references in production source code or in fixture data of currently-relevant tests.
 
