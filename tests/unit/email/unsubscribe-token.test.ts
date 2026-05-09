@@ -2,7 +2,7 @@ import { describe, expect, it, beforeEach } from "vitest";
 import { signUnsubscribeToken, verifyUnsubscribeToken } from "@/lib/email/unsubscribe-token";
 
 beforeEach(() => {
-  process.env.NOTIFY_TOKEN_SECRET = "test-secret-do-not-use-in-prod";
+  process.env.NOTIFY_TOKEN_SECRET = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
 });
 
 describe("unsubscribe token", () => {
@@ -30,5 +30,10 @@ describe("unsubscribe token", () => {
   it("throws if NOTIFY_TOKEN_SECRET is unset when signing", () => {
     delete process.env.NOTIFY_TOKEN_SECRET;
     expect(() => signUnsubscribeToken("user-abc", "chat_email")).toThrow(/NOTIFY_TOKEN_SECRET/);
+  });
+
+  it("throws if NOTIFY_TOKEN_SECRET is shorter than 32 chars", () => {
+    process.env.NOTIFY_TOKEN_SECRET = "too-short";
+    expect(() => signUnsubscribeToken("user-abc", "chat_email")).toThrow(/at least 32 chars/);
   });
 });

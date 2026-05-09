@@ -5,6 +5,11 @@ type Purpose = "chat_email";
 function secret(): Buffer {
   const s = process.env.NOTIFY_TOKEN_SECRET;
   if (!s) throw new Error("NOTIFY_TOKEN_SECRET is not set");
+  if (s.length < 32) {
+    throw new Error(
+      "NOTIFY_TOKEN_SECRET must be at least 32 chars. Generate with: openssl rand -hex 32",
+    );
+  }
   return Buffer.from(s, "utf8");
 }
 
