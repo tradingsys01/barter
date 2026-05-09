@@ -56,10 +56,6 @@ export default async function EditListingPage({ params }: { params: Promise<{ id
           <input id="wants_text" name="wants_text" defaultValue={listing.wants_text ?? ""} maxLength={500}
                  className="w-full rounded border px-3 py-2" />
         </div>
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" name="accepts_credits" defaultChecked={listing.accepts_credits} />
-          Also accept community credits
-        </label>
         <button type="submit" className="rounded bg-emerald-700 px-4 py-2 text-white">Save</button>
       </form>
     </main>
