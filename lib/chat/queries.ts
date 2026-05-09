@@ -149,11 +149,12 @@ export async function markChatRead(chatId: string, userId: string): Promise<void
     .eq("id", chatId)
     .maybeSingle();
   if (!chat) return;
+  const now = new Date().toISOString();
   const patch =
     chat.initiator_id === userId
-      ? { initiator_last_read_at: new Date().toISOString() }
+      ? { initiator_last_read_at: now, email_pending_initiator: false }
       : chat.owner_id === userId
-      ? { owner_last_read_at: new Date().toISOString() }
+      ? { owner_last_read_at: now, email_pending_owner: false }
       : null;
   if (!patch) return;
   await supabase.from("chats").update(patch).eq("id", chatId);
