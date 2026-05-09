@@ -28,6 +28,7 @@ vi.mock("@supabase/supabase-js", () => ({
         select(cols: string) { builder._select = cols; return builder; },
         update(patch: Record<string, unknown>) { builder._update = patch; return builder; },
         eq(col: string, val: unknown) { builder._eq.push([col, val]); return builder; },
+        or() { return builder; },
         async maybeSingle() {
           if (table === "chats") return { data: supabaseState.chat, error: null };
           if (table === "users")  {
@@ -45,11 +46,13 @@ vi.mock("@supabase/supabase-js", () => ({
         },
         async then(resolve: (v: unknown) => unknown) {
           if (builder._update && table === "chats") {
-            if ((builder._update as any).email_pending_initiator === false ||
-                (builder._update as any).email_pending_owner === false) {
+            // Reset path: clearing the cooldown timestamp to null after a send failure.
+            if ((builder._update as any).last_email_sent_at_initiator === null ||
+                (builder._update as any).last_email_sent_at_owner === null) {
               supabaseState.resetCalls++;
               return resolve({ data: [{ id: "c1" }], error: null });
             }
+            // Claim path: conditional UPDATE that sets the timestamp.
             return resolve({
               data: Array.from({ length: supabaseState.conditionalUpdateAffected }, () => ({ id: "c1" })),
               error: null,
@@ -71,6 +74,7 @@ beforeEach(() => {
   process.env.EMAIL_FROM = "Barter <notify@barter.test>";
   process.env.EMAIL_PROVIDER = "resend";
   process.env.RESEND_API_KEY = "re_test";
+  delete process.env.CHAT_EMAIL_COOLDOWN_MINUTES;
 
   sendEmailMock.mockReset();
   sendEmailMock.mockResolvedValue(undefined);
@@ -79,8 +83,8 @@ beforeEach(() => {
     initiator_id: "u-init",
     owner_id: "u-own",
     listing_id: "l1",
-    email_pending_initiator: false,
-    email_pending_owner: false,
+    last_email_sent_at_initiator: null,
+    last_email_sent_at_owner: null,
   };
   supabaseState.recipient = {
     id: "u-own",
@@ -96,7 +100,7 @@ afterEach(() => {
   vi.resetModules();
 });
 
-describe("maybeSendChatEmail — gate", () => {
+describe("maybeSendChatEmail — cooldown gate", () => {
   it("sends to the owner when initiator is the sender", async () => {
     const { maybeSendChatEmail } = await import("@/lib/chat/notify");
     supabaseState.recipient = { ...supabaseState.recipient, display_name: "Owner Olive" };
@@ -130,11 +134,18 @@ describe("maybeSendChatEmail — gate", () => {
     expect(sendEmailMock).not.toHaveBeenCalled();
   });
 
-  it("skips when email_pending_<side> is already true", async () => {
-    supabaseState.chat.email_pending_owner = true;
+  it("skips when last_email_sent_at_<side> is within cooldown", async () => {
+    supabaseState.chat.last_email_sent_at_owner = new Date(Date.now() - 60_000).toISOString(); // 1 min ago
     const { maybeSendChatEmail } = await import("@/lib/chat/notify");
     await maybeSendChatEmail("c1", "u-init", "x");
     expect(sendEmailMock).not.toHaveBeenCalled();
+  });
+
+  it("sends when last_email_sent_at_<side> is older than cooldown", async () => {
+    supabaseState.chat.last_email_sent_at_owner = new Date(Date.now() - 30 * 60_000).toISOString(); // 30 min ago, default cooldown is 15
+    const { maybeSendChatEmail } = await import("@/lib/chat/notify");
+    await maybeSendChatEmail("c1", "u-init", "x");
+    expect(sendEmailMock).toHaveBeenCalledTimes(1);
   });
 
   it("skips when the conditional UPDATE returns 0 rows (race lost)", async () => {
@@ -144,7 +155,7 @@ describe("maybeSendChatEmail — gate", () => {
     expect(sendEmailMock).not.toHaveBeenCalled();
   });
 
-  it("resets email_pending_<side> when sendEmail throws", async () => {
+  it("clears last_email_sent_at_<side> when sendEmail throws", async () => {
     sendEmailMock.mockRejectedValue(new Error("Resend 429: rate limit"));
     const errLog = vi.spyOn(console, "error").mockImplementation(() => {});
     const { maybeSendChatEmail } = await import("@/lib/chat/notify");
@@ -162,6 +173,14 @@ describe("maybeSendChatEmail — gate", () => {
     const text = sendEmailMock.mock.calls[0][0].text as string;
     expect(text).toContain("a".repeat(500) + "…");
     expect(text).not.toContain("a".repeat(501));
+  });
+
+  it("respects CHAT_EMAIL_COOLDOWN_MINUTES override", async () => {
+    process.env.CHAT_EMAIL_COOLDOWN_MINUTES = "60"; // 60 min cooldown
+    supabaseState.chat.last_email_sent_at_owner = new Date(Date.now() - 30 * 60_000).toISOString(); // 30 min ago
+    const { maybeSendChatEmail } = await import("@/lib/chat/notify");
+    await maybeSendChatEmail("c1", "u-init", "x");
+    expect(sendEmailMock).not.toHaveBeenCalled();
   });
 
   it("skips with an error log when APP_URL is unset", async () => {

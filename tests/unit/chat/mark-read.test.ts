@@ -28,23 +28,24 @@ vi.mock("@/lib/supabase/server", () => ({
 }));
 
 describe("markChatRead", () => {
-  it("clears email_pending_initiator when the viewer is the initiator", async () => {
+  it("updates initiator_last_read_at when the viewer is the initiator", async () => {
     updates.length = 0;
     const { markChatRead } = await import("@/lib/chat/queries");
     await markChatRead("c1", "u-init");
     expect(updates).toHaveLength(1);
-    expect(updates[0].patch).toMatchObject({ email_pending_initiator: false });
     expect(updates[0].patch.initiator_last_read_at).toEqual(expect.any(String));
-    expect(updates[0].patch).not.toHaveProperty("email_pending_owner");
+    expect(updates[0].patch).not.toHaveProperty("email_pending_initiator");
+    expect(updates[0].patch).not.toHaveProperty("last_email_sent_at_initiator");
   });
 
-  it("clears email_pending_owner when the viewer is the owner", async () => {
+  it("updates owner_last_read_at when the viewer is the owner", async () => {
     updates.length = 0;
     const { markChatRead } = await import("@/lib/chat/queries");
     await markChatRead("c1", "u-own");
     expect(updates).toHaveLength(1);
-    expect(updates[0].patch).toMatchObject({ email_pending_owner: false });
     expect(updates[0].patch.owner_last_read_at).toEqual(expect.any(String));
+    expect(updates[0].patch).not.toHaveProperty("email_pending_owner");
+    expect(updates[0].patch).not.toHaveProperty("last_email_sent_at_owner");
   });
 
   it("no-ops when the viewer is neither party", async () => {

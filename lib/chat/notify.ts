@@ -3,6 +3,7 @@ import { sendEmail } from "@/lib/email/resend";
 import { signUnsubscribeToken } from "@/lib/email/unsubscribe-token";
 
 const MAX_BODY_CHARS = 500;
+const DEFAULT_COOLDOWN_MINUTES = 15;
 
 function admin() {
   return createClient(
@@ -14,6 +15,12 @@ function admin() {
 
 function truncate(s: string, n: number): string {
   return s.length <= n ? s : s.slice(0, n) + "…";
+}
+
+function cooldownCutoffISO(): string {
+  const min = Number(process.env.CHAT_EMAIL_COOLDOWN_MINUTES ?? DEFAULT_COOLDOWN_MINUTES);
+  const safe = Number.isFinite(min) && min > 0 ? min : DEFAULT_COOLDOWN_MINUTES;
+  return new Date(Date.now() - safe * 60_000).toISOString();
 }
 
 export async function maybeSendChatEmail(
@@ -31,7 +38,7 @@ export async function maybeSendChatEmail(
 
   const { data: chat } = await db
     .from("chats")
-    .select("id, initiator_id, owner_id, listing_id, email_pending_initiator, email_pending_owner")
+    .select("id, initiator_id, owner_id, listing_id, last_email_sent_at_initiator, last_email_sent_at_owner")
     .eq("id", chatId)
     .maybeSingle();
   if (!chat) return;
@@ -40,10 +47,12 @@ export async function maybeSendChatEmail(
     senderId === chat.initiator_id ? chat.owner_id : chat.initiator_id;
   const side: "initiator" | "owner" =
     recipientId === chat.initiator_id ? "initiator" : "owner";
-  const flagCol =
-    side === "initiator" ? "email_pending_initiator" : "email_pending_owner";
+  const sentCol =
+    side === "initiator" ? "last_email_sent_at_initiator" : "last_email_sent_at_owner";
 
-  if ((chat as any)[flagCol] === true) return;
+  const cutoff = cooldownCutoffISO();
+  const lastSent = (chat as any)[sentCol] as string | null;
+  if (lastSent && lastSent > cutoff) return;
 
   const { data: rec } = await db
     .from("users")
@@ -58,11 +67,12 @@ export async function maybeSendChatEmail(
     db.from("listings").select("title").eq("id", chat.listing_id).maybeSingle(),
   ]);
 
+  const claimAt = new Date().toISOString();
   const { data: claimed } = await db
     .from("chats")
-    .update({ [flagCol]: true })
+    .update({ [sentCol]: claimAt })
     .eq("id", chatId)
-    .eq(flagCol, false)
+    .or(`${sentCol}.is.null,${sentCol}.lt.${cutoff}`)
     .select("id");
   if (!claimed || claimed.length === 0) return;
 
@@ -95,12 +105,12 @@ export async function maybeSendChatEmail(
       },
     });
   } catch (err) {
-    console.error("[chat-email] send failed; resetting flag", { chatId, recipientId, err: String(err) });
+    console.error("[chat-email] send failed; clearing cooldown", { chatId, recipientId, err: String(err) });
     try {
-      await db.from("chats").update({ [flagCol]: false }).eq("id", chatId);
+      await db.from("chats").update({ [sentCol]: null }).eq("id", chatId);
     } catch (resetErr) {
       console.error(
-        "[chat-email] CRITICAL: flag reset failed; chat now permanently muted until DB fix",
+        "[chat-email] CRITICAL: cooldown reset failed; chat muted for the cooldown window",
         { chatId, recipientId, resetErr: String(resetErr) },
       );
     }

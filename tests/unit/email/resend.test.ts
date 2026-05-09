@@ -7,6 +7,8 @@ beforeEach(() => {
   fetchMock.mockReset();
   vi.stubGlobal("fetch", fetchMock);
   process.env.EMAIL_FROM = "Barter <notify@example.com>";
+  delete process.env.EMAIL_PROVIDER;
+  delete process.env.RESEND_API_KEY;
 });
 
 afterEach(() => {
