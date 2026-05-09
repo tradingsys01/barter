@@ -216,6 +216,27 @@ pnpm build
 
 > **Footgun.** `NEXT_PUBLIC_*` vars are inlined into the **client bundle at build time**. If you run a bare `pnpm build` without sourcing `/opt/barter/.env.production` first, those vars are undefined in the browser and `createBrowserClient` throws *"Your project's URL and API key are required"* on the first auth-touching client interaction (e.g. Sign out). The systemd `EnvironmentFile=` only covers runtime — it cannot retroactively fix a stale build. Always export the env before `pnpm build`, or use `pnpm exec dotenv -e /opt/barter/.env.production -- pnpm build`. After fixing, browsers may need a hard refresh to drop the cached broken bundle.
 
+### Chat email notifications (app-level)
+
+The app sends an email when a chat recipient receives a message they
+haven't seen yet. Configuration:
+
+```bash
+# /opt/barter/.env.production
+EMAIL_PROVIDER=resend                       # 'resend' (prod) or 'inbucket' (dev)
+EMAIL_FROM='Barter <notify@your-domain>'    # the From: header on outgoing emails
+RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxxxxxx # from resend.com dashboard
+NOTIFY_TOKEN_SECRET=<32+ random chars>      # HMAC secret for unsubscribe links
+APP_URL=https://barter.example              # already required; used for absolute links
+```
+
+`NOTIFY_TOKEN_SECRET` is independent from the Supabase JWT secret. Generate
+with `openssl rand -hex 32`. Rotating it invalidates all outstanding
+unsubscribe links — users would need to click a link from a fresher email.
+
+In dev, set `EMAIL_PROVIDER=inbucket` in your local `.env`. Mails appear at
+http://localhost:9000 (Inbucket UI from `supabase/dev/docker-compose.dev.yml`).
+
 ## 10. Systemd unit
 
 `/etc/systemd/system/barter.service`:
