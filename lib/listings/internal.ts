@@ -13,7 +13,6 @@ export type ListingRow = {
   category_id: string;
   area_id: string;
   wants_text: string | null;
-  accepts_credits: boolean;
   status: "active";
 };
 
@@ -27,7 +26,6 @@ export function buildListingRow(input: CreateListingInput, ownerId: string): Lis
     category_id: input.category_id,
     area_id: input.area_id,
     wants_text: input.wants_text ?? null,
-    accepts_credits: input.accepts_credits,
     status: "active",
   };
 }

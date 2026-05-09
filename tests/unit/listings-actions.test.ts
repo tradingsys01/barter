@@ -8,7 +8,6 @@ const validInput = {
   category_id: "11111111-1111-1111-1111-111111111111",
   area_id:     "22222222-2222-2222-2222-222222222222",
   wants_text: undefined,
-  accepts_credits: false,
 };
 
 function makeFile(name: string, bytes: number, type = "image/jpeg"): File {

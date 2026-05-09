@@ -10,7 +10,6 @@ export const createListingSchema = z.object({
   category_id: z.string().uuid(),
   area_id: z.string().uuid(),
   wants_text: z.string().trim().max(500).optional(),
-  accepts_credits: z.boolean().default(false),
 });
 
 export type CreateListingInput = z.infer<typeof createListingSchema>;
