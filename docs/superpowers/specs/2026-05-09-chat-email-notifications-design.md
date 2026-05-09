@@ -45,8 +45,9 @@ sendMessage() server action            (existing — lib/chat/actions.ts:64)
                                           Resend HTTP API
 
 chat page load (app/chats/[id]/page.tsx)   (existing)
-  └─ markChatRead(chatId)                  ← new server action
-       └─ clears email_pending_<side> on chats row
+  └─ markChatRead(chatId, userId)          (existing — lib/chat/queries.ts:144)
+       └─ already updates last_read_at; extend to also clear
+          email_pending_<side> in same UPDATE
 
 unsubscribe link in email
   └─ /unsubscribe?token=<signed>           ← new route
@@ -57,14 +58,13 @@ unsubscribe link in email
 
 - `lib/email/resend.ts` — thin `fetch` wrapper around Resend HTTP API. Reads `RESEND_API_KEY`, `EMAIL_FROM`. In dev, an `EMAIL_PROVIDER=inbucket` switch routes via SMTP to the existing Inbucket container (`supabase/dev/docker-compose.dev.yml:23`).
 - `lib/chat/notify.ts` — `maybeSendChatEmail(chatId, senderId, body)` gate logic + email composition.
-- `lib/chat/read.ts` — `markChatRead(chatId)` server action.
 - `lib/email/unsubscribe-token.ts` — HMAC sign/verify for unsubscribe tokens.
 - `app/unsubscribe/page.tsx` + `app/unsubscribe/actions.ts` — token-verified opt-out page.
 
 ### Modified files
 
 - `lib/chat/actions.ts` — `sendMessage` calls `after(() => maybeSendChatEmail(...))` after the insert.
-- `app/chats/[id]/page.tsx` — invokes `markChatRead(chatId)` on load (server-side, before render).
+- `lib/chat/queries.ts` — extend the existing `markChatRead(chatId, userId)` (already at line 144, already called from `app/chats/[id]/page.tsx:33`) to also clear `email_pending_<viewerSide>`. No new wiring needed at the page layer.
 
 ### New env vars
 
@@ -128,17 +128,18 @@ The conditional UPDATE at step 8 is the concurrency guard: two messages arriving
 
 The error-path reset at step 9 means a transient Resend outage doesn't permanently mute a chat — the next message kicks off another attempt.
 
-### Read-reset path — `markChatRead(chatId)`
+### Read-reset path — extend existing `markChatRead`
 
-```sql
-update chats
-  set email_pending_<viewerSide> = false
-  where id = chatId
-    and email_pending_<viewerSide> = true
-    and (initiator_id = $userId or owner_id = $userId);
+`lib/chat/queries.ts` already exports `markChatRead(chatId, userId)` and it's already invoked from `app/chats/[id]/page.tsx:33` on every chat-page load. Extend its update payload to also clear the viewer's email-pending flag in the same statement:
+
+```ts
+const patch =
+  c.initiator_id === userId
+    ? { initiator_last_read_at: new Date().toISOString(), email_pending_initiator: false }
+    : { owner_last_read_at: new Date().toISOString(), email_pending_owner: false };
 ```
 
-Idempotent. The `<viewerSide>` is computed from whether `auth.uid()` matches `initiator_id` or `owner_id`. Called once per chat-page load (RSC layer of `app/chats/[id]/page.tsx`).
+Idempotent. No new file, no new call site.
 
 ## Email content
 
