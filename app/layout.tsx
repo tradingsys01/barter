@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { SiteHeader } from "@/components/site-header";
+import { SiteFooter } from "@/components/site-footer";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
@@ -15,9 +16,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={cn("font-sans", geist.variable)}>
-      <body className="bg-white text-zinc-900 antialiased">
+      <body className="flex min-h-screen flex-col bg-white text-zinc-900 antialiased">
         <SiteHeader />
         {children}
+        <SiteFooter />
       </body>
     </html>
   );
