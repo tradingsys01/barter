@@ -32,6 +32,40 @@ export default async function EditListingPage({ params }: { params: Promise<{ id
           </p>
         </header>
 
+        {/* Existing photos - outside form to allow nested delete forms */}
+        {sortedImages.length > 0 && (
+          <div className="mb-8 space-y-3">
+            <label className="block text-sm font-medium text-zinc-700">
+              Current photos
+            </label>
+            <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+              {sortedImages.map((img) => (
+                <div key={img.id} className="group relative aspect-square overflow-hidden rounded-lg border border-zinc-200 bg-zinc-100">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={listingImageUrl(img.path)}
+                    alt=""
+                    className="h-full w-full object-cover"
+                  />
+                  <form action={deleteListingImage} className="absolute right-1 top-1">
+                    <input type="hidden" name="image_id" value={img.id} />
+                    <input type="hidden" name="listing_id" value={listing.id} />
+                    <button
+                      type="submit"
+                      className="rounded-full bg-black/60 p-1.5 text-white opacity-0 transition-opacity hover:bg-red-600 group-hover:opacity-100"
+                      title="Remove photo"
+                    >
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </form>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <form action={editListing} className="space-y-8">
           <input type="hidden" name="id" value={listing.id} />
 
@@ -116,42 +150,11 @@ export default async function EditListingPage({ params }: { params: Promise<{ id
             </Field>
           </div>
 
-          {/* Photos */}
-          <div className="space-y-4">
+          {/* Add new photos */}
+          <div className="space-y-2">
             <label className="block text-sm font-medium text-zinc-700">
-              Photos <span className="font-normal text-zinc-500">(optional)</span>
+              Add photos <span className="font-normal text-zinc-500">(optional)</span>
             </label>
-
-            {/* Existing photos */}
-            {sortedImages.length > 0 && (
-              <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
-                {sortedImages.map((img) => (
-                  <div key={img.id} className="group relative aspect-square overflow-hidden rounded-lg border border-zinc-200 bg-zinc-100">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={listingImageUrl(img.path)}
-                      alt=""
-                      className="h-full w-full object-cover"
-                    />
-                    <form action={deleteListingImage} className="absolute right-1 top-1">
-                      <input type="hidden" name="image_id" value={img.id} />
-                      <input type="hidden" name="listing_id" value={listing.id} />
-                      <button
-                        type="submit"
-                        className="rounded-full bg-black/60 p-1.5 text-white opacity-0 transition-opacity hover:bg-red-600 group-hover:opacity-100"
-                        title="Remove photo"
-                      >
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </form>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Add new photos */}
             <PhotoUploader name="photos" />
           </div>
 
