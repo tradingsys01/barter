@@ -28,20 +28,20 @@ export function ListingCard({ item }: { item: FeedItem }) {
           </div>
         )}
       </div>
-      <div className="space-y-1.5 p-3">
-        <div className="flex items-center justify-between gap-2">
+      <div className="space-y-1 p-2.5 sm:space-y-1.5 sm:p-3">
+        <div className="flex items-center justify-between gap-1.5 sm:gap-2">
           <TypeBadge type={item.type} />
           {item.area_name && (
-            <span className="flex items-center gap-1 text-xs text-zinc-500">
-              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <span className="flex items-center gap-0.5 truncate text-[11px] text-zinc-500 sm:gap-1 sm:text-xs">
+              <svg className="h-2.5 w-2.5 shrink-0 sm:h-3 sm:w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
-              {item.area_name}
+              <span className="truncate">{item.area_name}</span>
             </span>
           )}
         </div>
-        <h3 className="line-clamp-2 text-sm font-medium leading-snug text-zinc-900">{item.title}</h3>
+        <h3 className="line-clamp-2 text-[13px] font-medium leading-snug text-zinc-900 sm:text-sm">{item.title}</h3>
       </div>
     </Link>
   );

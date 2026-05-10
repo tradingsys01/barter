@@ -4,9 +4,10 @@ const LABELS = {
 } as const;
 
 export function TypeBadge({ type }: { type: keyof typeof LABELS }) {
-  const { label, className } = LABELS[type];
+  const config = LABELS[type] ?? LABELS.offer;
+  const { label, className } = config;
   return (
-    <span className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${className}`}>
+    <span className={`inline-block shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium sm:px-2 sm:text-xs ${className}`}>
       {label}
     </span>
   );

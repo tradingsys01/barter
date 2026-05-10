@@ -30,17 +30,17 @@ export async function CategoryChips({ active, baseParams }: Props) {
   return (
     <div className="relative">
       {/* Fade hints for scroll */}
-      <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-6 bg-gradient-to-r from-white to-transparent sm:hidden" />
-      <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-6 bg-gradient-to-l from-white to-transparent sm:hidden" />
+      <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-4 bg-gradient-to-r from-white to-transparent sm:hidden" />
+      <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-4 bg-gradient-to-l from-white to-transparent sm:hidden" />
 
       <nav
-        className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-3 pt-1 scrollbar-none sm:mx-0 sm:flex-wrap sm:px-0"
+        className="-mx-3 flex gap-2 overflow-x-auto px-3 pb-2 pt-1 scrollbar-none sm:mx-0 sm:flex-wrap sm:px-0"
         aria-label="Categories"
       >
         <Link
           href={withParam(baseParams, "c", undefined)}
           className={
-            "shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all " +
+            "shrink-0 rounded-full px-3.5 py-2.5 text-sm font-medium transition-all sm:px-4 sm:py-2 " +
             (!active
               ? "bg-emerald-600 text-white shadow-sm"
               : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200")
@@ -53,7 +53,7 @@ export async function CategoryChips({ active, baseParams }: Props) {
             key={c.slug}
             href={withParam(baseParams, "c", c.slug)}
             className={
-              "shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all " +
+              "shrink-0 rounded-full px-3.5 py-2.5 text-sm font-medium transition-all sm:px-4 sm:py-2 " +
               (active === c.slug
                 ? "bg-emerald-600 text-white shadow-sm"
                 : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200")
