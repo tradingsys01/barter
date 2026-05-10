@@ -79,7 +79,78 @@ export async function editListing(form: FormData): Promise<void> {
     .single();
   if (error || !data) throw new Error(error?.message ?? "Could not update listing");
 
+  // Handle new photo uploads
+  const files = form.getAll("photos").filter((f): f is File => f instanceof File && f.size > 0);
+  if (files.length > 0) {
+    validateImageFiles(files);
+    // Get current max sort_order
+    const { data: existingImages } = await supabase
+      .from("listing_images")
+      .select("sort_order")
+      .eq("listing_id", id)
+      .order("sort_order", { ascending: false })
+      .limit(1);
+    const startOrder = (existingImages?.[0]?.sort_order ?? -1) + 1;
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const path = `${id}/${startOrder + i}.${fileExt(file.name)}`;
+      const { error: upErr } = await supabase.storage.from("listings").upload(path, file, {
+        contentType: file.type,
+        upsert: false,
+      });
+      if (upErr) throw new Error(`Upload failed for ${file.name}: ${upErr.message}`);
+
+      const { error: imgErr } = await supabase.from("listing_images").insert({
+        listing_id: id,
+        path,
+        sort_order: startOrder + i,
+      });
+      if (imgErr) throw new Error(imgErr.message);
+    }
+  }
+
   redirect(`/l/${data.id}/${data.slug}`);
+}
+
+export async function deleteListingImage(formData: FormData): Promise<void> {
+  const user = await requireUser();
+  const imageId = String(formData.get("image_id") ?? "");
+  const listingId = String(formData.get("listing_id") ?? "");
+  if (!imageId || !listingId) throw new Error("Missing image or listing id");
+
+  const supabase = await createClient();
+
+  // Verify ownership
+  const { data: listing } = await supabase
+    .from("listings")
+    .select("id")
+    .eq("id", listingId)
+    .eq("owner_id", user.id)
+    .single();
+  if (!listing) throw new Error("Not authorized");
+
+  // Get image path before deleting
+  const { data: image } = await supabase
+    .from("listing_images")
+    .select("path")
+    .eq("id", imageId)
+    .eq("listing_id", listingId)
+    .single();
+  if (!image) throw new Error("Image not found");
+
+  // Delete from storage
+  await supabase.storage.from("listings").remove([image.path]);
+
+  // Delete from database
+  const { error } = await supabase
+    .from("listing_images")
+    .delete()
+    .eq("id", imageId)
+    .eq("listing_id", listingId);
+  if (error) throw new Error(error.message);
+
+  redirect(`/me/listings/${listingId}/edit`);
 }
 
 export async function archiveListing(formData: FormData): Promise<void> {

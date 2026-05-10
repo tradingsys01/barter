@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { editListing } from "@/lib/listings/actions";
+import { editListing, deleteListingImage } from "@/lib/listings/actions";
+import { listingImageUrl } from "@/lib/img";
+import { PhotoUploader } from "@/components/listings/photo-uploader";
 
 export const metadata = { title: "Edit listing — Quadra Barter" };
 
@@ -9,12 +11,14 @@ export default async function EditListingPage({ params }: { params: Promise<{ id
   const user = await requireUser();
   const { id } = await params;
   const supabase = await createClient();
-  const [{ data: listing }, { data: categories }, { data: areas }] = await Promise.all([
+  const [{ data: listing }, { data: categories }, { data: areas }, { data: images }] = await Promise.all([
     supabase.from("listings").select("*").eq("id", id).eq("owner_id", user.id).maybeSingle(),
     supabase.from("categories").select("id, name").order("sort_order"),
     supabase.from("areas").select("id, name").order("sort_order"),
+    supabase.from("listing_images").select("id, path, sort_order").eq("listing_id", id).order("sort_order"),
   ]);
   if (!listing) notFound();
+  const sortedImages = (images ?? []).slice().sort((a, b) => a.sort_order - b.sort_order);
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:py-12">
@@ -110,6 +114,45 @@ export default async function EditListingPage({ params }: { params: Promise<{ id
                 className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 text-zinc-900 shadow-sm transition-colors placeholder:text-zinc-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
               />
             </Field>
+          </div>
+
+          {/* Photos */}
+          <div className="space-y-4">
+            <label className="block text-sm font-medium text-zinc-700">
+              Photos <span className="font-normal text-zinc-500">(optional)</span>
+            </label>
+
+            {/* Existing photos */}
+            {sortedImages.length > 0 && (
+              <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+                {sortedImages.map((img) => (
+                  <div key={img.id} className="group relative aspect-square overflow-hidden rounded-lg border border-zinc-200 bg-zinc-100">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={listingImageUrl(img.path)}
+                      alt=""
+                      className="h-full w-full object-cover"
+                    />
+                    <form action={deleteListingImage} className="absolute right-1 top-1">
+                      <input type="hidden" name="image_id" value={img.id} />
+                      <input type="hidden" name="listing_id" value={listing.id} />
+                      <button
+                        type="submit"
+                        className="rounded-full bg-black/60 p-1.5 text-white opacity-0 transition-opacity hover:bg-red-600 group-hover:opacity-100"
+                        title="Remove photo"
+                      >
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </form>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Add new photos */}
+            <PhotoUploader name="photos" />
           </div>
 
           {/* Submit */}
