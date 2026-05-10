@@ -23,13 +23,14 @@ export default async function HomePage(
 
 
   return (
-    <main className="mx-auto max-w-5xl space-y-4 px-3 py-3 sm:space-y-6 sm:p-6">
+    <main className="mx-auto max-w-5xl space-y-3 px-3 pb-6 pt-2 sm:space-y-6 sm:p-6">
+      {/* Hero - hidden on mobile, shown on tablet+ */}
       {!isFiltered && (
-        <section className="space-y-2 py-2 text-center sm:space-y-4 sm:py-6">
-          <h1 className="text-xl font-semibold text-zinc-900 sm:text-3xl md:text-4xl">
+        <section className="hidden text-center sm:block sm:space-y-4 sm:py-6">
+          <h1 className="text-3xl font-semibold text-zinc-900 md:text-4xl">
             Swap goods & services on Quadra
           </h1>
-          <p className="mx-auto max-w-md text-sm text-zinc-600 sm:text-base">
+          <p className="mx-auto max-w-md text-zinc-600">
             Neighbours trading what they have for what they need.
           </p>
           {!user && (

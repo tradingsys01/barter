@@ -10,7 +10,7 @@ export function ListingCard({ item }: { item: FeedItem }) {
       href={`/l/${item.id}/${item.slug}`}
       className="group block overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm transition-all hover:border-zinc-300 hover:shadow-md"
     >
-      <div className="relative aspect-square w-full overflow-hidden bg-gradient-to-br from-zinc-100 to-zinc-50">
+      <div className="relative aspect-[4/3] w-full overflow-hidden bg-gradient-to-br from-zinc-100 to-zinc-50 sm:aspect-square">
         {item.cover_path ? (
           <Image
             src={listingImageUrl(item.cover_path)}

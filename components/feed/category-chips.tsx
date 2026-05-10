@@ -28,13 +28,13 @@ export async function CategoryChips({ active, baseParams }: Props) {
   const allCats = [{ slug: "wanted", name: "Wanted", icon: "🙋" }, ...(cats ?? [])];
 
   return (
-    <div className="relative">
+    <div className="relative -mx-3 overflow-hidden sm:mx-0">
       {/* Fade hints for scroll */}
       <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-4 bg-gradient-to-r from-white to-transparent sm:hidden" />
       <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-4 bg-gradient-to-l from-white to-transparent sm:hidden" />
 
       <nav
-        className="-mx-3 flex gap-2 overflow-x-auto px-3 pb-2 pt-1 scrollbar-none sm:mx-0 sm:flex-wrap sm:px-0"
+        className="flex gap-2 overflow-x-auto px-3 pb-2 pt-1 scrollbar-none sm:flex-wrap sm:px-0"
         aria-label="Categories"
       >
         <Link
