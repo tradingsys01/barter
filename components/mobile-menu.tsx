@@ -34,8 +34,9 @@ export function MobileMenu({ user, greeting, unread }: Props) {
       {open && (
         <>
           <div
-            className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm"
+            className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm cursor-pointer"
             onClick={() => setOpen(false)}
+            onTouchEnd={() => setOpen(false)}
             aria-hidden="true"
           />
           <nav className="absolute right-4 top-14 z-50 w-56 rounded-xl border border-zinc-200 bg-white p-2 shadow-lg">
