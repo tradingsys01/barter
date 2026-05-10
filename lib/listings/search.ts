@@ -32,7 +32,12 @@ export function buildSearchFilter(input: SearchInput): SearchFilter {
     }
   }
   if (input.categorySlug && input.categorySlug.trim()) {
-    out.categorySlug = input.categorySlug.trim();
+    const slug = input.categorySlug.trim();
+    if (slug === "wanted") {
+      out.type = "want";
+    } else {
+      out.categorySlug = slug;
+    }
   }
   if (input.areaSlug && input.areaSlug.trim()) {
     out.areaSlug = input.areaSlug.trim();

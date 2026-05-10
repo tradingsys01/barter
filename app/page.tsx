@@ -6,22 +6,20 @@ import { CategoryChips } from "@/components/feed/category-chips";
 import { getSessionUser } from "@/lib/auth";
 
 export default async function HomePage(
-  { searchParams }: { searchParams: Promise<{ q?: string; c?: string; a?: string; t?: string }> },
+  { searchParams }: { searchParams: Promise<{ q?: string; c?: string; a?: string }> },
 ) {
   const sp = await searchParams;
-  const wantOnly = sp.t === "want";
   const [items, user] = await Promise.all([
     searchListings({
       q: sp.q,
       categorySlug: sp.c,
       areaSlug: sp.a,
-      type: wantOnly ? "want" : undefined,
       limit: 24,
     }),
     getSessionUser(),
   ]);
 
-  const isFiltered = !!(sp.q || sp.c || sp.a || wantOnly);
+  const isFiltered = !!(sp.q || sp.c || sp.a);
 
 
   return (
@@ -47,8 +45,7 @@ export default async function HomePage(
         <SearchBar defaultValue={sp.q} />
         <CategoryChips
           active={sp.c}
-          wantOnly={wantOnly}
-          baseParams={{ q: sp.q, a: sp.a, t: wantOnly ? "want" : undefined }}
+          baseParams={{ q: sp.q, a: sp.a }}
         />
       </div>
 

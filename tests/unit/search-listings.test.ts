@@ -34,4 +34,16 @@ describe("buildSearchFilter", () => {
     expect(buildSearchFilter({ type: "offer" as any })).toEqual({});
     expect(buildSearchFilter({ type: "" as any })).toEqual({});
   });
+
+  it("treats categorySlug='wanted' as type='want' pseudo-category", () => {
+    expect(buildSearchFilter({ categorySlug: "wanted" })).toEqual({ type: "want" });
+  });
+
+  it("combines wanted pseudo-category with other filters", () => {
+    expect(buildSearchFilter({ categorySlug: "wanted", q: "tools", areaSlug: "quathiaski-cove" })).toEqual({
+      type: "want",
+      q: "tools",
+      areaSlug: "quathiaski-cove",
+    });
+  });
 });
