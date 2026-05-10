@@ -48,7 +48,7 @@ export function SearchBar({ defaultValue }: { defaultValue?: string }) {
           value={value}
           onChange={(e) => setValue(e.target.value)}
           placeholder="Search listings…"
-          className="w-full rounded-xl border border-zinc-200 bg-zinc-50 py-2.5 pl-11 pr-10 text-sm shadow-sm transition-all placeholder:text-zinc-400 focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+          className="w-full rounded-xl border border-zinc-200 bg-zinc-50 py-2.5 pl-11 pr-10 text-sm shadow-sm transition-all placeholder:text-zinc-400 focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden"
           aria-label="Search listings"
         />
         {value && (
