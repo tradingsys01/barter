@@ -19,6 +19,7 @@ service, or seeking something.
 - ${ORIGIN}/c/garden — Garden
 - ${ORIGIN}/c/outdoor — Outdoor
 - ${ORIGIN}/c/services — Services
+- ${ORIGIN}/c/garage-sale — Garage sale
 - ${ORIGIN}/area/quathiaski-cove — Quathiaski Cove
 - ${ORIGIN}/area/heriot-bay — Heriot Bay
 - ${ORIGIN}/area/cape-mudge — Cape Mudge / Yaculta

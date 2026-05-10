@@ -20,6 +20,7 @@ insert into public.categories (slug, name, icon, sort_order) values
   ('books',    'Books',    '📚', 50),
   ('garden',   'Garden',   '🌱', 60),
   ('outdoor',  'Outdoor',  '🏕️', 70),
-  ('services', 'Services', '🔧', 80),
-  ('other',    'Other',    '✳️', 99)
+  ('services',    'Services',    '🔧',   80),
+  ('garage-sale', 'Garage sale', '🏷️',  90),
+  ('other',       'Other',       '✳️',   99)
 on conflict (slug) do nothing;
