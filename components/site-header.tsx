@@ -22,6 +22,7 @@ export async function SiteHeader() {
                 </span>
               )}
               <Link href="/listings/new" className="text-zinc-700 hover:underline">Post</Link>
+              <Link href="/me/listings" className="text-zinc-700 hover:underline">My listings</Link>
               <Link
                 href="/chats"
                 className="relative inline-flex items-center text-zinc-700 hover:underline"
