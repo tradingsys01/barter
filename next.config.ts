@@ -11,6 +11,11 @@ const nextConfig: NextConfig = {
       { protocol: supabaseProtocol, hostname: supabaseHost },
     ],
   },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "5mb",
+    },
+  },
 };
 
 export default nextConfig;

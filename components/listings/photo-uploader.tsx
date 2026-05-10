@@ -3,8 +3,8 @@
 import { useState, useRef } from "react";
 import { MAX_IMAGES } from "@/lib/listings/internal";
 
-const MAX_DIMENSION = 1200;
-const JPEG_QUALITY = 0.8;
+const MAX_DIMENSION = 1000;
+const JPEG_QUALITY = 0.75;
 
 async function resizeImage(file: File): Promise<File> {
   return new Promise((resolve, reject) => {
