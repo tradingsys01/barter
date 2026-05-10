@@ -122,14 +122,21 @@ export async function getListing(id: string): Promise<ListingDetail | null> {
   };
 }
 
-export async function listMyListings(userId: string): Promise<FeedItem[]> {
+export type MyListingItem = FeedItem & {
+  expires_at: string | null;
+};
+
+export async function listMyListings(userId: string): Promise<MyListingItem[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("listings")
-    .select(FEED_SELECT)
+    .select(`${FEED_SELECT}, expires_at`)
     .eq("owner_id", userId)
     .neq("status", "archived")
     .order("created_at", { ascending: false });
   if (error) throw error;
-  return (data ?? []).map(shapeFeedRow);
+  return (data ?? []).map((r: any) => ({
+    ...shapeFeedRow(r),
+    expires_at: r.expires_at,
+  }));
 }

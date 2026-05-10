@@ -95,3 +95,18 @@ export async function archiveListing(formData: FormData): Promise<void> {
   if (error) throw new Error(error.message);
   redirect("/me/listings");
 }
+
+export async function extendListing(formData: FormData): Promise<void> {
+  const user = await requireUser();
+  const id = String(formData.get("id") ?? "");
+  if (!id) throw new Error("Missing listing id");
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("listings")
+    .update({ expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() })
+    .eq("id", id)
+    .eq("owner_id", user.id)
+    .eq("status", "active");
+  if (error) throw new Error(error.message);
+  redirect("/me/listings");
+}

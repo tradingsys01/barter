@@ -1,9 +1,21 @@
 import Link from "next/link";
 import { listMyListings } from "@/lib/listings/queries";
-import { archiveListing } from "@/lib/listings/actions";
+import { archiveListing, extendListing } from "@/lib/listings/actions";
 import { TypeBadge } from "@/components/listings/type-badge";
 import { listingImageUrl } from "@/lib/img";
 import { requireUser } from "@/lib/auth";
+
+function formatExpiry(expiresAt: string | null): { text: string; urgent: boolean } {
+  if (!expiresAt) return { text: "", urgent: false };
+  const now = Date.now();
+  const expires = new Date(expiresAt).getTime();
+  const daysLeft = Math.ceil((expires - now) / (1000 * 60 * 60 * 24));
+  if (daysLeft < 0) return { text: "Expired", urgent: true };
+  if (daysLeft === 0) return { text: "Expires today", urgent: true };
+  if (daysLeft === 1) return { text: "Expires tomorrow", urgent: true };
+  if (daysLeft <= 7) return { text: `Expires in ${daysLeft} days`, urgent: true };
+  return { text: `Expires in ${daysLeft} days`, urgent: false };
+}
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "My listings — Quadra Barter" };
@@ -66,8 +78,17 @@ export default async function MyListingsPage() {
                 )}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="mb-1 flex items-center gap-2">
+                <div className="mb-1 flex flex-wrap items-center gap-2">
                   <TypeBadge type={it.type} />
+                  {(() => {
+                    const { text, urgent } = formatExpiry(it.expires_at);
+                    if (!text) return null;
+                    return (
+                      <span className={`text-xs ${urgent ? "text-amber-600 font-medium" : "text-zinc-500"}`}>
+                        {text}
+                      </span>
+                    );
+                  })()}
                 </div>
                 <Link
                   href={`/l/${it.id}/${it.slug}`}
@@ -77,6 +98,15 @@ export default async function MyListingsPage() {
                 </Link>
               </div>
               <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
+                <form action={extendListing}>
+                  <input type="hidden" name="id" value={it.id} />
+                  <button
+                    type="submit"
+                    className="inline-flex w-full items-center justify-center rounded-lg border border-emerald-200 bg-white px-3 py-1.5 text-xs font-medium text-emerald-700 transition hover:bg-emerald-50 sm:text-sm"
+                  >
+                    +30 days
+                  </button>
+                </form>
                 <Link
                   href={`/me/listings/${it.id}/edit`}
                   className="inline-flex items-center justify-center rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 transition hover:bg-zinc-50 sm:text-sm"
