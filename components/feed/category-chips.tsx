@@ -27,43 +27,34 @@ export async function CategoryChips({ active, baseParams }: Props) {
 
   const allCats = [{ slug: "wanted", name: "Wanted", icon: "🙋" }, ...(cats ?? [])];
 
-  return (
-    <div className="relative -mx-3 overflow-hidden sm:mx-0">
-      {/* Fade hints for scroll */}
-      <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-4 bg-gradient-to-r from-white to-transparent sm:hidden" />
-      <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-4 bg-gradient-to-l from-white to-transparent sm:hidden" />
+  const allWithAll = [{ slug: "", name: "All", icon: "✨" }, ...allCats];
 
-      <nav
-        className="flex gap-2 overflow-x-auto px-3 pb-2 pt-1 scrollbar-none sm:flex-wrap sm:px-0"
-        aria-label="Categories"
-      >
-        <Link
-          href={withParam(baseParams, "c", undefined)}
-          className={
-            "shrink-0 rounded-full px-3.5 py-2.5 text-sm font-medium transition-all sm:px-4 sm:py-2 " +
-            (!active
-              ? "bg-emerald-600 text-white shadow-sm"
-              : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200")
-          }
-        >
-          All
-        </Link>
-        {allCats.map((c) => (
+  return (
+    <nav
+      className="grid grid-cols-4 gap-1.5 sm:flex sm:flex-wrap sm:gap-2"
+      aria-label="Categories"
+    >
+      {allWithAll.map((c) => {
+        const isActive = c.slug === "" ? !active : active === c.slug;
+        return (
           <Link
-            key={c.slug}
-            href={withParam(baseParams, "c", c.slug)}
+            key={c.slug || "all"}
+            href={withParam(baseParams, "c", c.slug || undefined)}
             className={
-              "shrink-0 rounded-full px-3.5 py-2.5 text-sm font-medium transition-all sm:px-4 sm:py-2 " +
-              (active === c.slug
-                ? "bg-emerald-600 text-white shadow-sm"
-                : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200")
+              "flex flex-col items-center gap-0.5 rounded-xl px-2 py-2 text-center transition-all active:scale-95 " +
+              "sm:flex-row sm:gap-1.5 sm:rounded-full sm:px-4 sm:py-2 " +
+              (isActive
+                ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/25"
+                : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200 hover:shadow-sm")
             }
           >
-            {c.icon && <span className="mr-1.5">{c.icon}</span>}
-            {c.name}
+            <span className="text-lg sm:text-base">{c.icon}</span>
+            <span className="text-[11px] font-medium leading-tight sm:text-sm">
+              {c.name}
+            </span>
           </Link>
-        ))}
-      </nav>
-    </div>
+        );
+      })}
+    </nav>
   );
 }
