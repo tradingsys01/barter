@@ -28,4 +28,10 @@ describe("buildSearchFilter", () => {
   it("ignores empty or whitespace-only slugs", () => {
     expect(buildSearchFilter({ categorySlug: "", areaSlug: "   " })).toEqual({});
   });
+
+  it("accepts type='want' and drops unknown type values", () => {
+    expect(buildSearchFilter({ type: "want" })).toEqual({ type: "want" });
+    expect(buildSearchFilter({ type: "offer" as any })).toEqual({});
+    expect(buildSearchFilter({ type: "" as any })).toEqual({});
+  });
 });

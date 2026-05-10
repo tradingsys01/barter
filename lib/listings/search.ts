@@ -5,6 +5,8 @@ export type SearchInput = {
   q?: string;
   categorySlug?: string;
   areaSlug?: string;
+  /** Filter by listing type. Currently only "want" is exposed in the UI. */
+  type?: "want";
   limit?: number;
 };
 
@@ -12,6 +14,7 @@ export type SearchFilter = {
   q?: string;
   categorySlug?: string;
   areaSlug?: string;
+  type?: "want";
 };
 
 /**
@@ -33,6 +36,9 @@ export function buildSearchFilter(input: SearchInput): SearchFilter {
   }
   if (input.areaSlug && input.areaSlug.trim()) {
     out.areaSlug = input.areaSlug.trim();
+  }
+  if (input.type === "want") {
+    out.type = "want";
   }
   return out;
 }
@@ -74,6 +80,7 @@ export async function searchListings(input: SearchInput): Promise<FeedItem[]> {
     .eq("status", "active");
   if (categoryId) query = query.eq("category_id", categoryId);
   if (areaId) query = query.eq("area_id", areaId);
+  if (filter.type === "want") query = query.eq("type", "want");
   if (filter.q) {
     query = query.textSearch("search_tsv", filter.q, {
       type: "websearch",
