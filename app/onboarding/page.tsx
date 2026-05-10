@@ -1,9 +1,8 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+
+export const metadata = { title: "Welcome — Quadra Barter" };
 
 export default async function OnboardingPage() {
   const user = await requireUser();
@@ -30,33 +29,73 @@ export default async function OnboardingPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-6">
-      <form action={save} className="w-full max-w-sm space-y-4">
-        <h1 className="text-2xl font-semibold">Welcome</h1>
-        <p className="text-sm text-zinc-600">A couple of details and you're in.</p>
-
-        <div>
-          <Label htmlFor="display_name">Display name</Label>
-          <Input id="display_name" name="display_name" required maxLength={40} />
+    <main className="flex min-h-[80vh] items-center justify-center px-4 py-12">
+      <div className="w-full max-w-md">
+        {/* Welcome header */}
+        <div className="mb-8 text-center">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-100">
+            <span className="text-3xl">🤝</span>
+          </div>
+          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 sm:text-3xl">
+            Welcome to Quadra Barter
+          </h1>
+          <p className="mt-2 text-zinc-600">
+            Just a couple of details and you&apos;re ready to start trading
+          </p>
         </div>
 
-        <div>
-          <Label htmlFor="area_id">Area on Quadra</Label>
-          <select
-            id="area_id"
-            name="area_id"
-            required
-            className="flex h-9 w-full rounded-md border border-zinc-200 bg-white px-3 py-1 text-sm"
+        {/* Form card */}
+        <form
+          action={save}
+          className="space-y-6 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm sm:p-8"
+        >
+          <div className="space-y-2">
+            <label htmlFor="display_name" className="block text-sm font-medium text-zinc-700">
+              What should we call you?
+            </label>
+            <input
+              id="display_name"
+              name="display_name"
+              required
+              maxLength={40}
+              placeholder="Your name or nickname"
+              className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 text-zinc-900 shadow-sm transition-colors placeholder:text-zinc-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+            />
+            <p className="text-xs text-zinc-500">This is how other islanders will see you</p>
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="area_id" className="block text-sm font-medium text-zinc-700">
+              Where on Quadra are you?
+            </label>
+            <select
+              id="area_id"
+              name="area_id"
+              required
+              className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 text-zinc-900 shadow-sm transition-colors focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+            >
+              <option value="">Choose your area…</option>
+              {areas?.map((a) => (
+                <option key={a.id} value={a.id}>{a.name}</option>
+              ))}
+            </select>
+            <p className="text-xs text-zinc-500">Helps neighbours find local swaps</p>
+          </div>
+
+          <button
+            type="submit"
+            className="w-full rounded-lg bg-emerald-600 px-6 py-3 text-base font-medium text-white shadow-md shadow-emerald-600/20 transition-all hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-600/25 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 active:scale-[0.98]"
           >
-            <option value="">Choose…</option>
-            {areas?.map((a) => (
-              <option key={a.id} value={a.id}>{a.name}</option>
-            ))}
-          </select>
-        </div>
+            Get started
+          </button>
+        </form>
 
-        <Button type="submit" className="w-full">Continue</Button>
-      </form>
+        {/* Footer note */}
+        <p className="mt-6 text-center text-xs text-zinc-500">
+          By continuing, you agree to our community guidelines:<br />
+          be kind, trade fair, keep it local.
+        </p>
+      </div>
     </main>
   );
 }
