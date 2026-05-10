@@ -5,7 +5,7 @@ test("authed user can post a listing", async ({ page, request }) => {
   await signInViaMailpit(page, request, "Test User");
 
   await page.goto("/listings/new");
-  await page.getByLabel(/type/i).selectOption("offer_goods");
+  await page.getByLabel(/type/i).selectOption("offer");
   await page.getByLabel(/title/i).fill("Two ripe apples from our tree");
   await page.getByLabel(/description/i).fill("Picked this morning.");
   await page.locator("select[name=category_id]").selectOption({ label: "Food" });

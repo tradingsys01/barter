@@ -19,9 +19,22 @@ export default async function NewListingPage() {
       <form action={createListing} className="space-y-4">
         <Field label="Type" htmlFor="type">
           <select id="type" name="type" required className="w-full rounded border px-3 py-2">
-            <option value="offer_goods">Offering goods</option>
-            <option value="offer_service">Offering a service</option>
+            <option value="offer">Offering</option>
             <option value="want">Wanted</option>
+          </select>
+        </Field>
+
+        <Field label="Category" htmlFor="category_id">
+          <select
+            id="category_id"
+            name="category_id"
+            required
+            className="w-full rounded border px-3 py-2"
+          >
+            <option value="">Pick one…</option>
+            {(categories ?? []).map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
           </select>
         </Field>
 
@@ -44,20 +57,6 @@ export default async function NewListingPage() {
             rows={4}
             className="w-full rounded border px-3 py-2"
           />
-        </Field>
-
-        <Field label="Category" htmlFor="category_id">
-          <select
-            id="category_id"
-            name="category_id"
-            required
-            className="w-full rounded border px-3 py-2"
-          >
-            <option value="">Pick one…</option>
-            {(categories ?? []).map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
         </Field>
 
         <Field label="Area" htmlFor="area_id">

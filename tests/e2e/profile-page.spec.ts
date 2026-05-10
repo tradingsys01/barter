@@ -6,7 +6,7 @@ test("public profile shows display name, area, listings", async ({ page, request
   // Get the user id by signing in then reading from /me — or post a listing
   // and pull the owner from the URL.
   await page.goto("/listings/new");
-  await page.getByLabel(/type/i).selectOption("offer_goods");
+  await page.getByLabel(/type/i).selectOption("offer");
   await page.getByLabel(/title/i).fill("Profile test sweater");
   await page.locator("select[name=category_id]").selectOption({ label: "Clothing" });
   await page.locator("select[name=area_id]").selectOption({ label: "Quathiaski Cove" });

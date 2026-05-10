@@ -8,7 +8,7 @@ import { buildListingRow } from "@/lib/listings/internal";
 // re-read the spec first.
 
 const validInput = {
-  type: "offer_goods" as const,
+  type: "offer" as const,
   title: "Two ripe apples",
   category_id: "11111111-1111-1111-1111-111111111111",
   area_id:     "22222222-2222-2222-2222-222222222222",

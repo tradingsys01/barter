@@ -6,7 +6,7 @@ test("user can edit and archive their own listing", async ({ page, request }) =>
 
   // Post one
   await page.goto("/listings/new");
-  await page.getByLabel(/type/i).selectOption("offer_goods");
+  await page.getByLabel(/type/i).selectOption("offer");
   await page.getByLabel(/title/i).fill("Manage me apples");
   await page.locator("select[name=category_id]").selectOption({ label: "Food" });
   await page.locator("select[name=area_id]").selectOption({ label: "Quathiaski Cove" });

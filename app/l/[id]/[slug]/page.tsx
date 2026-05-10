@@ -45,7 +45,7 @@ export default async function ListingPage({ params }: { params: Promise<Params> 
 
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": l.type === "offer_service" ? "Service" : "Product",
+    "@type": "Product",
     name: l.title,
     description: l.description ?? undefined,
     image: l.images.map((i) => listingImageUrl(i.path)),

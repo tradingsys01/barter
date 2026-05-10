@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { buildListingRow, validateImageFiles, MAX_IMAGES, MAX_FILE_BYTES } from "@/lib/listings/internal";
 
 const validInput = {
-  type: "offer_goods" as const,
+  type: "offer" as const,
   title: "Two ripe apples",
   description: undefined,
   category_id: "11111111-1111-1111-1111-111111111111",

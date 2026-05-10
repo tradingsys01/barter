@@ -24,9 +24,14 @@ export default async function EditListingPage({ params }: { params: Promise<{ id
         <div className="space-y-1">
           <label htmlFor="type" className="block text-sm font-medium">Type</label>
           <select id="type" name="type" defaultValue={listing.type} className="w-full rounded border px-3 py-2">
-            <option value="offer_goods">Offering goods</option>
-            <option value="offer_service">Offering a service</option>
+            <option value="offer">Offering</option>
             <option value="want">Wanted</option>
+          </select>
+        </div>
+        <div className="space-y-1">
+          <label htmlFor="category_id" className="block text-sm font-medium">Category</label>
+          <select id="category_id" name="category_id" defaultValue={listing.category_id ?? ""} className="w-full rounded border px-3 py-2">
+            {(categories ?? []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </div>
         <div className="space-y-1">
@@ -38,12 +43,6 @@ export default async function EditListingPage({ params }: { params: Promise<{ id
           <label htmlFor="description" className="block text-sm font-medium">Description</label>
           <textarea id="description" name="description" defaultValue={listing.description ?? ""} rows={4} maxLength={2000}
                     className="w-full rounded border px-3 py-2" />
-        </div>
-        <div className="space-y-1">
-          <label htmlFor="category_id" className="block text-sm font-medium">Category</label>
-          <select id="category_id" name="category_id" defaultValue={listing.category_id ?? ""} className="w-full rounded border px-3 py-2">
-            {(categories ?? []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
         </div>
         <div className="space-y-1">
           <label htmlFor="area_id" className="block text-sm font-medium">Area</label>

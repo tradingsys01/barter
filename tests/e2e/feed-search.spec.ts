@@ -10,7 +10,7 @@ test("feed filters by search query and category chip", async ({ page, request })
     ["Unrelated tools post", "Tools"],
   ] as const) {
     await page.goto("/listings/new");
-    await page.getByLabel(/type/i).selectOption("offer_goods");
+    await page.getByLabel(/type/i).selectOption("offer");
     await page.getByLabel(/title/i).fill(title);
     await page.locator("select[name=category_id]").selectOption({ label: category });
     await page.locator("select[name=area_id]").selectOption({ label: "Quathiaski Cove" });
@@ -43,7 +43,7 @@ test("search stems related word forms (excavator <-> excavation)", async ({
   await signInViaMailpit(page, request, "Stemming Steve");
 
   await page.goto("/listings/new");
-  await page.getByLabel(/type/i).selectOption("offer_service");
+  await page.getByLabel(/type/i).selectOption("offer");
   await page.getByLabel(/title/i).fill("Excavator work for hire");
   await page.locator("select[name=category_id]").selectOption({ label: "Tools" });
   await page.locator("select[name=area_id]").selectOption({ label: "Quathiaski Cove" });

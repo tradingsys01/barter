@@ -9,7 +9,7 @@ test("two users can exchange messages in a chat", async ({ browser, request }) =
   await signInViaMailpit(pageA, request, "Conv Alice");
 
   await pageA.goto("/listings/new");
-  await pageA.getByLabel(/type/i).selectOption("offer_goods");
+  await pageA.getByLabel(/type/i).selectOption("offer");
   await pageA.getByLabel(/title/i).fill("Carrots from the garden");
   await pageA.locator("select[name=category_id]").selectOption({ label: "Garden" });
   await pageA.locator("select[name=area_id]").selectOption({ label: "Quathiaski Cove" });

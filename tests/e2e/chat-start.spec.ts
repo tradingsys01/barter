@@ -8,7 +8,7 @@ test("a different user can offer a swap and lands on a chat", async ({ browser, 
   await signInViaMailpit(pageA, request, "Owner Alice");
 
   await pageA.goto("/listings/new");
-  await pageA.getByLabel(/type/i).selectOption("offer_goods");
+  await pageA.getByLabel(/type/i).selectOption("offer");
   await pageA.getByLabel(/title/i).fill("Sourdough loaf");
   await pageA.locator("select[name=category_id]").selectOption({ label: "Food" });
   await pageA.locator("select[name=area_id]").selectOption({ label: "Quathiaski Cove" });

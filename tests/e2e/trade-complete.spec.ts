@@ -9,7 +9,7 @@ test("two users complete a trade and rate each other", async ({ browser, request
   const pageA = await ctxA.newPage();
   await signInViaMailpit(pageA, request, "Trade Alice");
   await pageA.goto("/listings/new");
-  await pageA.getByLabel(/type/i).selectOption("offer_goods");
+  await pageA.getByLabel(/type/i).selectOption("offer");
   await pageA.getByLabel(/title/i).fill("Honey jar from our hives");
   await pageA.locator("select[name=category_id]").selectOption({ label: "Food" });
   await pageA.locator("select[name=area_id]").selectOption({ label: "Quathiaski Cove" });

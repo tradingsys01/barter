@@ -4,7 +4,7 @@ export type FeedItem = {
   id: string;
   slug: string;
   title: string;
-  type: "offer_goods" | "offer_service" | "want";
+  type: "offer" | "want";
   status: "active" | "reserved" | "completed" | "archived";
   area_name: string | null;
   category_name: string | null;

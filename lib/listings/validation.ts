@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const LISTING_TYPES = ["offer_goods", "offer_service", "want"] as const;
+export const LISTING_TYPES = ["offer", "want"] as const;
 export type ListingType = (typeof LISTING_TYPES)[number];
 
 export const createListingSchema = z.object({

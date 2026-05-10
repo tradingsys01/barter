@@ -6,7 +6,7 @@ test("listing detail page renders title, description, and JSON-LD", async ({ pag
 
   // Post a listing
   await page.goto("/listings/new");
-  await page.getByLabel(/type/i).selectOption("offer_goods");
+  await page.getByLabel(/type/i).selectOption("offer");
   await page.getByLabel(/title/i).fill("Detail page test apples");
   await page.getByLabel(/description/i).fill("Just for the detail page test.");
   await page.locator("select[name=category_id]").selectOption({ label: "Food" });

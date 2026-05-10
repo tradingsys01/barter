@@ -16,7 +16,7 @@ test("Chats link shows unread badge for the recipient and clears on view", async
   const pageA = await ctxA.newPage();
   await signInViaMailpit(pageA, request, "Badge Alice");
   await pageA.goto("/listings/new");
-  await pageA.getByLabel(/type/i).selectOption("offer_goods");
+  await pageA.getByLabel(/type/i).selectOption("offer");
   await pageA.getByLabel(/title/i).fill("Badge test pumpkins");
   await pageA.locator("select[name=category_id]").selectOption({ label: "Food" });
   await pageA.locator("select[name=area_id]").selectOption({ label: "Quathiaski Cove" });

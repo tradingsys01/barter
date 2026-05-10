@@ -9,7 +9,7 @@ test("user can report a listing they don't own", async ({ browser, request }) =>
   const pageO = await ctxO.newPage();
   await signInViaMailpit(pageO, request, "Reportee Owen");
   await pageO.goto("/listings/new");
-  await pageO.getByLabel(/type/i).selectOption("offer_goods");
+  await pageO.getByLabel(/type/i).selectOption("offer");
   await pageO.getByLabel(/title/i).fill("Reportable rutabaga");
   await pageO.locator("select[name=category_id]").selectOption({ label: "Food" });
   await pageO.locator("select[name=area_id]").selectOption({ label: "Quathiaski Cove" });

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createListingSchema } from "@/lib/listings/validation";
 
 const valid = {
-  type: "offer_goods" as const,
+  type: "offer" as const,
   title: "Two ripe apples",
   description: "From our backyard tree",
   category_id: "11111111-1111-1111-1111-111111111111",
