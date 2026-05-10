@@ -10,7 +10,7 @@ export function ListingGrid({ items, emptyText }: { items: FeedItem[]; emptyText
     );
   }
   return (
-    <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 md:grid-cols-4">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 md:grid-cols-4">
       {items.map((item) => <ListingCard key={item.id} item={item} />)}
     </div>
   );

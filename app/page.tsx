@@ -23,15 +23,14 @@ export default async function HomePage(
 
 
   return (
-    <main className="mx-auto max-w-5xl space-y-3 px-3 pb-6 pt-2 sm:space-y-6 sm:p-6">
-      {/* Hero - hidden on mobile, shown on tablet+ */}
+    <main className="mx-auto max-w-5xl space-y-6 p-4 sm:p-6">
       {!isFiltered && (
-        <section className="hidden text-center sm:block sm:space-y-4 sm:py-6">
-          <h1 className="text-3xl font-semibold text-zinc-900 md:text-4xl">
-            Swap goods & services on Quadra
+        <section className="hidden space-y-4 py-4 text-center sm:block sm:py-6">
+          <h1 className="text-2xl font-semibold text-zinc-900 sm:text-3xl md:text-4xl">
+            Swap goods and services on Quadra Island
           </h1>
           <p className="mx-auto max-w-md text-zinc-600">
-            Neighbours trading what they have for what they need.
+            Just neighbours trading what they have for what they need.
           </p>
           {!user && (
             <Link
@@ -47,7 +46,7 @@ export default async function HomePage(
         </section>
       )}
 
-      <div className="space-y-3 sm:space-y-4">
+      <div className="space-y-4">
         <SearchBar defaultValue={sp.q} />
         <CategoryChips
           active={sp.c}
@@ -55,8 +54,8 @@ export default async function HomePage(
         />
       </div>
 
-      <section className="space-y-3 sm:space-y-4">
-        <h2 className="text-base font-semibold text-zinc-900 sm:text-xl">
+      <section className="space-y-4">
+        <h2 className="text-lg font-semibold text-zinc-900 sm:text-xl">
           {isFiltered ? "Results" : "Latest listings"}
         </h2>
         <ListingGrid items={items} emptyText="No listings match your search." />
