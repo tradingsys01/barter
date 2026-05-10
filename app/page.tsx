@@ -23,7 +23,7 @@ export default async function HomePage(
           <h1 className="text-3xl font-semibold sm:text-4xl">
             Swap goods and services on Quadra Island
           </h1>
-          <p className="text-zinc-600">No money. Just neighbours trading what they have for what they need.</p>
+          <p className="text-zinc-600">Just neighbours trading what they have for what they need.</p>
           {!user && (
             <Link
               href="/signin"

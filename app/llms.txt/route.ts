@@ -21,10 +21,14 @@ service, or seeking something.
 - ${ORIGIN}/c/services — Services
 - ${ORIGIN}/area/quathiaski-cove — Quathiaski Cove
 - ${ORIGIN}/area/heriot-bay — Heriot Bay
-- ${ORIGIN}/area/cape-mudge — Cape Mudge
+- ${ORIGIN}/area/cape-mudge — Cape Mudge / Yaculta
 - ${ORIGIN}/area/granite-bay — Granite Bay
-- ${ORIGIN}/area/we-wai-kai — We Wai Kai
-- ${ORIGIN}/area/whaletown — Whaletown
+- ${ORIGIN}/area/bold-point — Bold Point
+- ${ORIGIN}/area/rebecca-spit — Rebecca Spit
+- ${ORIGIN}/area/gowlland-harbour — Gowlland Harbour
+- ${ORIGIN}/area/main-lakes-chain — Main Lakes Chain
+- ${ORIGIN}/area/open-bay — Open Bay
+- ${ORIGIN}/area/surge-narrows — Surge Narrows
 
 ## Sitemap
 
