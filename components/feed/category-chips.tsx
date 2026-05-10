@@ -28,29 +28,42 @@ export async function CategoryChips({ active, baseParams }: Props) {
   const allCats = [{ slug: "wanted", name: "Wanted", icon: "🙋" }, ...(cats ?? [])];
 
   return (
-    <nav className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-2 text-sm" aria-label="Categories">
-      <Link
-        href={withParam(baseParams, "c", undefined)}
-        className={
-          "shrink-0 rounded-full border px-3 py-1 " +
-          (!active ? "border-emerald-700 bg-emerald-50 text-emerald-900" : "border-zinc-300")
-        }
+    <div className="relative">
+      {/* Fade hints for scroll */}
+      <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-6 bg-gradient-to-r from-white to-transparent sm:hidden" />
+      <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-6 bg-gradient-to-l from-white to-transparent sm:hidden" />
+
+      <nav
+        className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-3 pt-1 scrollbar-none sm:mx-0 sm:flex-wrap sm:px-0"
+        aria-label="Categories"
       >
-        All
-      </Link>
-      {allCats.map((c) => (
         <Link
-          key={c.slug}
-          href={withParam(baseParams, "c", c.slug)}
+          href={withParam(baseParams, "c", undefined)}
           className={
-            "shrink-0 rounded-full border px-3 py-1 " +
-            (active === c.slug ? "border-emerald-700 bg-emerald-50 text-emerald-900" : "border-zinc-300")
+            "shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all " +
+            (!active
+              ? "bg-emerald-600 text-white shadow-sm"
+              : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200")
           }
         >
-          {c.icon && <span className="mr-1">{c.icon}</span>}
-          {c.name}
+          All
         </Link>
-      ))}
-    </nav>
+        {allCats.map((c) => (
+          <Link
+            key={c.slug}
+            href={withParam(baseParams, "c", c.slug)}
+            className={
+              "shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all " +
+              (active === c.slug
+                ? "bg-emerald-600 text-white shadow-sm"
+                : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200")
+            }
+          >
+            {c.icon && <span className="mr-1.5">{c.icon}</span>}
+            {c.name}
+          </Link>
+        ))}
+      </nav>
+    </div>
   );
 }
