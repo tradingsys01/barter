@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import { createListingSchema, editListingSchema } from "@/lib/listings/validation";
-import { buildListingRow, validateImageFiles, fileExt } from "@/lib/listings/internal";
+import { buildListingRow, validateImageFiles, fileExt, MAX_IMAGES } from "@/lib/listings/internal";
 import { slugify } from "@/lib/slug";
 
 export async function createListing(form: FormData): Promise<void> {
@@ -83,13 +83,16 @@ export async function editListing(form: FormData): Promise<void> {
   const files = form.getAll("photos").filter((f): f is File => f instanceof File && f.size > 0);
   if (files.length > 0) {
     validateImageFiles(files);
-    // Get current max sort_order
-    const { data: existingImages } = await supabase
+    // Check total image count (existing + new)
+    const { data: existingImages, count } = await supabase
       .from("listing_images")
-      .select("sort_order")
+      .select("sort_order", { count: "exact" })
       .eq("listing_id", id)
-      .order("sort_order", { ascending: false })
-      .limit(1);
+      .order("sort_order", { ascending: false });
+    const existingCount = count ?? 0;
+    if (existingCount + files.length > MAX_IMAGES) {
+      throw new Error(`You can have at most ${MAX_IMAGES} photos. You have ${existingCount}, trying to add ${files.length}.`);
+    }
     const startOrder = (existingImages?.[0]?.sort_order ?? -1) + 1;
 
     for (let i = 0; i < files.length; i++) {
