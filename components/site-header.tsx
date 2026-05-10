@@ -59,14 +59,29 @@ export async function SiteHeader() {
               >
                 Account
               </Link>
+              <Link
+                href="/feedback"
+                className="rounded-lg px-3 py-1.5 text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-700"
+                title="Send feedback"
+              >
+                Feedback
+              </Link>
             </>
           ) : (
-            <Link
-              href="/signin"
-              className="rounded-lg bg-emerald-600 px-4 py-1.5 text-sm font-medium text-white transition hover:bg-emerald-700"
-            >
-              Sign in
-            </Link>
+            <>
+              <Link
+                href="/feedback"
+                className="rounded-lg px-3 py-1.5 text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-700"
+              >
+                Feedback
+              </Link>
+              <Link
+                href="/signin"
+                className="rounded-lg bg-emerald-600 px-4 py-1.5 text-sm font-medium text-white transition hover:bg-emerald-700"
+              >
+                Sign in
+              </Link>
+            </>
           )}
         </nav>
 
