@@ -6,7 +6,7 @@ import { CategoryChips } from "@/components/feed/category-chips";
 import { getSessionUser } from "@/lib/auth";
 
 export default async function HomePage(
-  { searchParams }: { searchParams: Promise<{ q?: string; c?: string; a?: string }> },
+  { searchParams }: { searchParams: Promise<{ q?: string; c?: string; a?: string; from?: string; to?: string }> },
 ) {
   const sp = await searchParams;
   const [items, user] = await Promise.all([
@@ -14,12 +14,14 @@ export default async function HomePage(
       q: sp.q,
       categorySlug: sp.c,
       areaSlug: sp.a,
+      routeFrom: sp.from,
+      routeTo: sp.to,
       limit: 24,
     }),
     getSessionUser(),
   ]);
 
-  const isFiltered = !!(sp.q || sp.c || sp.a);
+  const isFiltered = !!(sp.q || sp.c || sp.a || sp.from || sp.to);
 
 
   return (
