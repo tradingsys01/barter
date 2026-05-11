@@ -3,12 +3,19 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
-import { createListingSchema, editListingSchema } from "@/lib/listings/validation";
+import {
+  createListingSchema,
+  createRideListingSchema,
+  editListingSchema,
+  editRideListingSchema,
+} from "@/lib/listings/validation";
 import { buildListingRow, validateImageFiles, fileExt, MAX_IMAGES } from "@/lib/listings/internal";
 import { slugify } from "@/lib/slug";
 
 export async function createListing(form: FormData): Promise<void> {
   const user = await requireUser();
+
+  const isRide = form.get("is_ride") === "true";
 
   const raw = {
     type: form.get("type"),
@@ -17,8 +24,18 @@ export async function createListing(form: FormData): Promise<void> {
     category_id: form.get("category_id"),
     area_id: form.get("area_id"),
     wants_text: form.get("wants_text") || undefined,
+    ...(isRide && {
+      route_from: form.get("route_from"),
+      route_to: form.get("route_to"),
+      schedule: form.get("schedule"),
+      seats: form.get("seats"),
+      gas_share: form.get("gas_share") === "on",
+    }),
   };
-  const parsed = createListingSchema.parse(raw);
+
+  const parsed = isRide
+    ? createRideListingSchema.parse(raw)
+    : createListingSchema.parse(raw);
 
   const files = form.getAll("photos").filter((f): f is File => f instanceof File && f.size > 0);
   validateImageFiles(files);
@@ -55,6 +72,8 @@ export async function createListing(form: FormData): Promise<void> {
 
 export async function editListing(form: FormData): Promise<void> {
   const user = await requireUser();
+  const isRide = form.get("is_ride") === "true";
+
   const raw = {
     id: form.get("id"),
     type: form.get("type") || undefined,
@@ -63,8 +82,19 @@ export async function editListing(form: FormData): Promise<void> {
     category_id: form.get("category_id") || undefined,
     area_id: form.get("area_id") || undefined,
     wants_text: form.get("wants_text") || undefined,
+    ...(isRide && {
+      route_from: form.get("route_from") || undefined,
+      route_to: form.get("route_to") || undefined,
+      schedule: form.get("schedule") || undefined,
+      seats: form.get("seats") || undefined,
+      gas_share: form.get("gas_share") === "on",
+    }),
   };
-  const parsed = editListingSchema.parse(raw);
+
+  const parsed = isRide
+    ? editRideListingSchema.parse(raw)
+    : editListingSchema.parse(raw);
+
   const supabase = await createClient();
   const { id, ...patch } = parsed;
   const update: Record<string, unknown> = { ...patch };
@@ -79,11 +109,10 @@ export async function editListing(form: FormData): Promise<void> {
     .single();
   if (error || !data) throw new Error(error?.message ?? "Could not update listing");
 
-  // Handle new photo uploads
+  // Handle new photo uploads (keep existing code for photo handling)
   const files = form.getAll("photos").filter((f): f is File => f instanceof File && f.size > 0);
   if (files.length > 0) {
     validateImageFiles(files);
-    // Check total image count (existing + new)
     const { data: existingImages, count } = await supabase
       .from("listing_images")
       .select("sort_order", { count: "exact" })
