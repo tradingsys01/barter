@@ -101,6 +101,39 @@ export default async function ListingPage({ params }: { params: Promise<Params> 
 
       {l.description && <p className="whitespace-pre-line text-zinc-800">{l.description}</p>}
 
+      {l.category_slug === "rides" && l.route_from_name && l.route_to_name && (
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 space-y-3">
+          <h2 className="text-sm font-semibold text-emerald-800 flex items-center gap-2">
+            <span>🚗</span> Ride Details
+          </h2>
+          <div className="grid gap-2 text-sm">
+            <div className="flex items-center gap-2">
+              <span className="font-medium text-zinc-700">Route:</span>
+              <span className="text-zinc-800">{l.route_from_name} → {l.route_to_name}</span>
+            </div>
+            {l.schedule && (
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-zinc-700">Schedule:</span>
+                <span className="text-zinc-800">{l.schedule}</span>
+              </div>
+            )}
+            {l.seats && (
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-zinc-700">Seats:</span>
+                <span className="text-zinc-800">{l.seats} available</span>
+              </div>
+            )}
+            {l.gas_share && (
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">
+                  Gas share welcome
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {l.wants_text && (
         <div className="rounded-lg border bg-zinc-50 p-4">
           <h2 className="text-sm font-semibold text-zinc-700">What I'd swap for</h2>
