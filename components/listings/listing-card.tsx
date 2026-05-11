@@ -1,3 +1,4 @@
+// components/listings/listing-card.tsx
 import Link from "next/link";
 import Image from "next/image";
 import { TypeBadge } from "./type-badge";
@@ -5,6 +6,8 @@ import { listingImageUrl } from "@/lib/img";
 import type { FeedItem } from "@/lib/listings/queries";
 
 export function ListingCard({ item }: { item: FeedItem }) {
+  const isRide = item.category_slug === "rides";
+
   return (
     <Link
       href={`/l/${item.id}/${item.slug}`}
@@ -19,6 +22,11 @@ export function ListingCard({ item }: { item: FeedItem }) {
             sizes="(max-width:640px) 50vw, 33vw"
             className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
+        ) : isRide ? (
+          <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-emerald-50 text-emerald-600">
+            <span className="text-4xl">🚗</span>
+            <span className="text-xs font-medium">Ride</span>
+          </div>
         ) : (
           <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-zinc-300">
             <svg className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
@@ -42,6 +50,11 @@ export function ListingCard({ item }: { item: FeedItem }) {
           )}
         </div>
         <h3 className="line-clamp-2 text-[13px] font-medium leading-snug text-zinc-900 sm:text-sm">{item.title}</h3>
+        {isRide && item.schedule && (
+          <p className="line-clamp-1 text-[11px] text-zinc-500 sm:text-xs">
+            {item.schedule} · {item.seats} seat{item.seats !== 1 ? "s" : ""}
+          </p>
+        )}
       </div>
     </Link>
   );
