@@ -5,6 +5,8 @@ export type SearchInput = {
   q?: string;
   categorySlug?: string;
   areaSlug?: string;
+  routeFrom?: string;
+  routeTo?: string;
   /** Filter by listing type. Currently only "want" is exposed in the UI. */
   type?: "want";
   limit?: number;
@@ -14,6 +16,8 @@ export type SearchFilter = {
   q?: string;
   categorySlug?: string;
   areaSlug?: string;
+  routeFrom?: string;
+  routeTo?: string;
   type?: "want";
 };
 
@@ -41,6 +45,12 @@ export function buildSearchFilter(input: SearchInput): SearchFilter {
   }
   if (input.areaSlug && input.areaSlug.trim()) {
     out.areaSlug = input.areaSlug.trim();
+  }
+  if (input.routeFrom && input.routeFrom.trim()) {
+    out.routeFrom = input.routeFrom.trim();
+  }
+  if (input.routeTo && input.routeTo.trim()) {
+    out.routeTo = input.routeTo.trim();
   }
   if (input.type === "want") {
     out.type = "want";
@@ -86,6 +96,8 @@ export async function searchListings(input: SearchInput): Promise<FeedItem[]> {
     .eq("status", "active");
   if (categoryId) query = query.eq("category_id", categoryId);
   if (areaId) query = query.eq("area_id", areaId);
+  if (filter.routeFrom) query = query.eq("route_from", filter.routeFrom);
+  if (filter.routeTo) query = query.eq("route_to", filter.routeTo);
   if (filter.type === "want") query = query.eq("type", "want");
   if (filter.q) {
     query = query.textSearch("search_tsv", filter.q, {
