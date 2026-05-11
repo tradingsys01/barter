@@ -12,6 +12,9 @@ export const metadata: Metadata = {
   title: "Quadra Island Barter",
   description: "Swap goods and services on Quadra Island, BC. No money. No shipping.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
+  verification: {
+    google: "Aa5-JFoKsC_xfnnhjpG9P_pYuuZhbmgwPcAAU73g8_A",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
