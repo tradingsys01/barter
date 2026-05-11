@@ -66,6 +66,12 @@ export default async function ChatPage({ params }: { params: Promise<Params> }) 
         </div>
       </header>
 
+      {chat.listing.category_slug === "rides" && (
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+          <strong>Tip:</strong> Let the driver know which days you need, where to meet, and what you can offer in return.
+        </div>
+      )}
+
       <section className="min-h-[40vh] rounded-lg border bg-white p-3">
         <MessageList messages={messages} viewerId={user.id} />
       </section>

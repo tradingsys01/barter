@@ -54,7 +54,14 @@ export async function listMyChats(userId: string): Promise<ChatListItem[]> {
 
 export type ChatHeader = {
   id: string;
-  listing: { id: string; title: string; slug: string; owner_id: string; cover_path: string | null };
+  listing: {
+    id: string;
+    title: string;
+    slug: string;
+    owner_id: string;
+    cover_path: string | null;
+    category_slug: string | null;
+  };
   initiator: { id: string; display_name: string | null };
   owner: { id: string; display_name: string | null };
 };
@@ -65,7 +72,7 @@ export async function getChat(chatId: string): Promise<ChatHeader | null> {
     .from("chats")
     .select(`
       id, initiator_id, owner_id,
-      listing:listing_id ( id, title, slug, owner_id, listing_images ( path, sort_order ) ),
+      listing:listing_id ( id, title, slug, owner_id, category_id, categories:category_id ( slug ), listing_images ( path, sort_order ) ),
       initiator:public_users!initiator_id ( id, display_name ),
       owner:public_users!owner_id ( id, display_name )
     `)
@@ -90,6 +97,7 @@ export async function getChat(chatId: string): Promise<ChatHeader | null> {
       slug: row.listing?.slug ?? "",
       owner_id: row.listing?.owner_id ?? row.owner_id,
       cover_path: cover,
+      category_slug: row.listing?.categories?.slug ?? null,
     },
     initiator: {
       id: row.initiator?.id ?? row.initiator_id,
