@@ -79,40 +79,57 @@ export function ListingForm({ action, categories, areas, ridesCategoryId }: Prop
         />
       </Field>
 
-      {/* Area & Swap preferences row */}
-      <div className="grid gap-6 sm:grid-cols-2">
-        <Field label="Area" htmlFor="area_id">
-          <select
-            id="area_id"
-            name="area_id"
-            required
-            className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 text-zinc-900 shadow-sm transition-colors focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-          >
-            <option value="">Pick one…</option>
-            {areas.map((a) => (
-              <option key={a.id} value={a.id}>{a.name}</option>
-            ))}
-          </select>
-        </Field>
+      {/* Area & Swap preferences row - Area hidden for rides */}
+      {isRide ? (
+        <>
+          <input type="hidden" name="area_id" value={areas[0]?.id ?? ""} />
+          <Field label="What I'd swap for" htmlFor="wants_text" optional>
+            <input
+              id="wants_text"
+              name="wants_text"
+              maxLength={500}
+              placeholder="e.g. gas share, eggs, produce"
+              className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 text-zinc-900 shadow-sm transition-colors placeholder:text-zinc-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+            />
+          </Field>
+        </>
+      ) : (
+        <div className="grid gap-6 sm:grid-cols-2">
+          <Field label="Area" htmlFor="area_id">
+            <select
+              id="area_id"
+              name="area_id"
+              required
+              className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 text-zinc-900 shadow-sm transition-colors focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+            >
+              <option value="">Pick one…</option>
+              {areas.map((a) => (
+                <option key={a.id} value={a.id}>{a.name}</option>
+              ))}
+            </select>
+          </Field>
 
-        <Field label="What I'd swap for" htmlFor="wants_text" optional>
-          <input
-            id="wants_text"
-            name="wants_text"
-            maxLength={500}
-            placeholder={isRide ? "e.g. gas share, eggs, produce" : "e.g. firewood, eggs, help with…"}
-            className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 text-zinc-900 shadow-sm transition-colors placeholder:text-zinc-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-          />
-        </Field>
-      </div>
+          <Field label="What I'd swap for" htmlFor="wants_text" optional>
+            <input
+              id="wants_text"
+              name="wants_text"
+              maxLength={500}
+              placeholder="e.g. firewood, eggs, help with…"
+              className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 text-zinc-900 shadow-sm transition-colors placeholder:text-zinc-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+            />
+          </Field>
+        </div>
+      )}
 
-      {/* Photos */}
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-zinc-700">
-          Photos <span className="font-normal text-zinc-500">(optional)</span>
-        </label>
-        <PhotoUploader name="photos" />
-      </div>
+      {/* Photos - hidden for rides */}
+      {!isRide && (
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-zinc-700">
+            Photos <span className="font-normal text-zinc-500">(optional)</span>
+          </label>
+          <PhotoUploader name="photos" />
+        </div>
+      )}
 
       {/* Submit */}
       <div className="flex justify-end border-t border-zinc-100 pt-6">
