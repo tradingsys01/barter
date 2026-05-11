@@ -8,14 +8,22 @@ export type FeedItem = {
   status: "active" | "reserved" | "completed" | "archived";
   area_name: string | null;
   category_name: string | null;
+  category_slug: string | null;
   cover_path: string | null;
   created_at: string;
+  // Ride fields
+  route_from: string | null;
+  route_to: string | null;
+  schedule: string | null;
+  seats: number | null;
+  gas_share: boolean;
 };
 
 const FEED_SELECT = `
   id, slug, title, type, status, created_at,
+  route_from, route_to, schedule, seats, gas_share,
   areas:area_id ( name ),
-  categories:category_id ( name ),
+  categories:category_id ( name, slug ),
   listing_images ( path, sort_order )
 `;
 
@@ -31,8 +39,14 @@ function shapeFeedRow(r: any): FeedItem {
     status: r.status,
     area_name: r.areas?.name ?? null,
     category_name: r.categories?.name ?? null,
+    category_slug: r.categories?.slug ?? null,
     cover_path: cover,
     created_at: r.created_at,
+    route_from: r.route_from ?? null,
+    route_to: r.route_to ?? null,
+    schedule: r.schedule ?? null,
+    seats: r.seats ?? null,
+    gas_share: r.gas_share ?? false,
   };
 }
 
@@ -83,6 +97,8 @@ export type ListingDetail = FeedItem & {
   wants_text: string | null;
   owner: { id: string; display_name: string | null };
   images: { path: string; alt_text: string | null; sort_order: number }[];
+  route_from_name: string | null;
+  route_to_name: string | null;
 };
 
 export async function getListing(id: string): Promise<ListingDetail | null> {
@@ -91,8 +107,9 @@ export async function getListing(id: string): Promise<ListingDetail | null> {
     .from("listings")
     .select(`
       id, slug, title, type, status, description, wants_text, created_at,
+      route_from, route_to, schedule, seats, gas_share,
       areas:area_id ( name ),
-      categories:category_id ( name ),
+      categories:category_id ( name, slug ),
       owner_id,
       public_users!owner_id ( id, display_name ),
       listing_images ( path, alt_text, sort_order )
@@ -102,6 +119,21 @@ export async function getListing(id: string): Promise<ListingDetail | null> {
   if (error) throw error;
   if (!data) return null;
   const images = (data.listing_images ?? []).slice().sort((a: any, b: any) => a.sort_order - b.sort_order);
+
+  // Resolve area names for routes if present
+  let routeFromName: string | null = null;
+  let routeToName: string | null = null;
+  if (data.route_from || data.route_to) {
+    const slugs = [data.route_from, data.route_to].filter(Boolean) as string[];
+    const { data: areas } = await supabase
+      .from("areas")
+      .select("slug, name")
+      .in("slug", slugs);
+    const areaMap = new Map((areas ?? []).map((a) => [a.slug, a.name]));
+    routeFromName = data.route_from ? areaMap.get(data.route_from) ?? null : null;
+    routeToName = data.route_to ? areaMap.get(data.route_to) ?? null : null;
+  }
+
   return {
     id: data.id,
     slug: data.slug,
@@ -112,6 +144,7 @@ export async function getListing(id: string): Promise<ListingDetail | null> {
     wants_text: data.wants_text,
     area_name: (data as any).areas?.name ?? null,
     category_name: (data as any).categories?.name ?? null,
+    category_slug: (data as any).categories?.slug ?? null,
     cover_path: images[0]?.path ?? null,
     created_at: data.created_at,
     owner: {
@@ -119,6 +152,13 @@ export async function getListing(id: string): Promise<ListingDetail | null> {
       display_name: (data as any).public_users?.display_name ?? null,
     },
     images,
+    route_from: data.route_from ?? null,
+    route_to: data.route_to ?? null,
+    route_from_name: routeFromName,
+    route_to_name: routeToName,
+    schedule: data.schedule ?? null,
+    seats: data.seats ?? null,
+    gas_share: data.gas_share ?? false,
   };
 }
 

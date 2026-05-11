@@ -78,8 +78,9 @@ export async function searchListings(input: SearchInput): Promise<FeedItem[]> {
     .from("listings")
     .select(`
       id, slug, title, type, status, created_at,
+      route_from, route_to, schedule, seats, gas_share,
       areas:area_id ( name ),
-      categories:category_id ( name ),
+      categories:category_id ( name, slug ),
       listing_images ( path, sort_order )
     `)
     .eq("status", "active");
@@ -106,9 +107,15 @@ export async function searchListings(input: SearchInput): Promise<FeedItem[]> {
     status: r.status,
     area_name: r.areas?.name ?? null,
     category_name: r.categories?.name ?? null,
+    category_slug: r.categories?.slug ?? null,
     cover_path: (r.listing_images ?? [])
       .slice()
       .sort((a: any, b: any) => a.sort_order - b.sort_order)[0]?.path ?? null,
     created_at: r.created_at,
+    route_from: r.route_from ?? null,
+    route_to: r.route_to ?? null,
+    schedule: r.schedule ?? null,
+    seats: r.seats ?? null,
+    gas_share: r.gas_share ?? false,
   }));
 }
